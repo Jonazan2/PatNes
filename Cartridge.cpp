@@ -46,12 +46,6 @@ bool Cartridge::TryLoad( const char* romFile )
     }
     cartridgeFile.close();
 
-    /* Check if the cartridge is big enough: at least 8KB */
-    if ( cartridgeSize <= sizeof(byte) * 1000 )
-    {
-        return false;
-    }
-
     if ( rom != nullptr )
     {
         return TryLoadHeader();
@@ -63,6 +57,12 @@ bool Cartridge::TryLoadHeader()
     static constexpr ui64 ROM_CONSTANT_HEADER = 0x4E45531A;
 
     if ( rom == nullptr )
+    {
+        return false;
+    }
+
+    /* Check that the cartridge is as big as the header */
+    if ( cartridgeSize < sizeof( byte ) * 16 )
     {
         return false;
     }
@@ -94,6 +94,7 @@ bool Cartridge::TryLoadHeader()
     header.mapper = upperNibbleMapper | lowerNibbleMapper;
 
     // TODO (Jonathan): Implement support for iNES 2.0
+    return true;
 }
 
 void Cartridge::PrintDetails() const
