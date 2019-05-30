@@ -35,7 +35,8 @@ public:
 
 private:
 
-    using InstructionFunctionPtr = short (Cpu::*)(); 
+    using InstructionFunctionPtr = short ( Cpu::* )(); 
+    using MappableInstructionFunctionPtr = short ( Cpu::* )( word ); 
 
     /* Registers */
     Register    PC;
@@ -56,7 +57,31 @@ private:
     short ExecuteInstruction( byte opcode );
     short ExecuteBranchInstruction( byte opcode );
     short ExecuteMappableInstruction( byte opcode );
+    short ExecuteInstructionCC00( byte opcode );
+    short ExecuteInstructionCC01( byte opcode );
+    short ExecuteInstructionCC10( byte opcode );
     short ExecuteSingleByteInstruction( byte opcode );
+
+    /* Addressing mode handling */
+    word GetImmediateAddress();
+    word GetZeroPageAddress();
+    word GetZeroPageAddressX();
+    word GetZeroPageAddressY();
+    word GetAbsoluteAddress();
+    word GetAbsoluteAddressX();
+    word GetAbsoluteAddressY();
+    word GetIndexedAddressX();
+    word GetIndexedAddressY();
+
+    /* Mappable instructions under the pattern aaabbbcc */
+    short ORA( word address );
+    short AND( word address );
+    short EOR( word address );
+    short ADC( word address );
+    short STA( word address );
+    short LDA( word address );
+    short CMP( word address );
+    short SBC( word address );
 
     /* Individual instructions */
     short PHP();

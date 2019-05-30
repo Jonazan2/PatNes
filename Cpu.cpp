@@ -31,9 +31,7 @@ void Cpu::Reset()
 word Cpu::Update()
 {
     const byte opcode = GetNextOpcode();
-    ExecuteInstruction( opcode );
-   
-    return 1;
+    return ExecuteInstruction( opcode );
 }
 
 short Cpu::ExecuteInstruction( byte opcode )
@@ -84,11 +82,75 @@ short Cpu::ExecuteBranchInstruction( byte opcode )
 
 short Cpu::ExecuteMappableInstruction( byte opcode )
 {
+    /* These instructions follow the aaabbbcc pattern where 'aaa/cc' specifies the instruction and 'bbb' the address mode */
+    const byte instruction = ( ( ( opcode & 0b1110'0000 ) >> 3 ) | ( opcode & 0b0000'0011 ) );
+
+    switch ( opcode & 0b0000'0011 )
+    {
+        case 0b0000'0000: { return ExecuteInstructionCC00( opcode ); }
+        case 0b0000'0001: { return ExecuteInstructionCC01( opcode ); }
+        case 0b0000'0010: { return ExecuteInstructionCC10( opcode ); }
+
+        default:
+        {
+            assert( false && "How did I get here?. The show where instructions say...How did I get here?");
+        }
+    }
+}
+
+short Cpu::ExecuteInstructionCC00( byte opcode )
+{
     const byte instruction = ( ( ( opcode & 0b1110'0000 ) >> 3 ) | ( opcode & 0b0000'0011 ) );
     const byte addressingMode = ( opcode & 0b0001'1100 ) >> 2;
 
+
     /* TODO (Jonathan): Implement proper cycle timing */
-    return 0; 
+    return 0;
+}
+
+short Cpu::ExecuteInstructionCC01( byte opcode )
+{
+    /* We only need the 'aaa' part of the instruction to map it since we already know that cc == 01 */
+    static const std::unordered_map< byte, MappableInstructionFunctionPtr > INSTRUCTION_MAP =
+    {
+        { 0x00, &Cpu::ORA },
+        { 0x01, &Cpu::AND },
+        { 0x02, &Cpu::EOR },
+        { 0x03, &Cpu::ADC },
+
+        { 0x04, &Cpu::STA },
+        { 0x05, &Cpu::LDA },
+        { 0x06, &Cpu::CMP },
+        { 0x07, &Cpu::SBC }
+    };
+
+
+    word address;
+    const byte addressingMode = ( opcode & 0b0001'1100 ) >> 2;
+    switch ( addressingMode )
+    {
+        case 0b0000'0000: { address = GetIndexedAddressX();     break; }
+        case 0b0000'0001: { address = GetZeroPageAddress();     break; }
+        case 0b0000'0010: { address = GetImmediateAddress();    break; }
+        case 0b0000'0011: { address = GetAbsoluteAddress();     break; }
+        case 0b0000'0100: { address = GetIndexedAddressY();     break; }
+        case 0b0000'0110: { address = GetAbsoluteAddressY();    break; }
+        case 0b0000'0111: { address = GetAbsoluteAddressX();    break; }
+    }
+
+    const byte instruction = ( ( opcode & 0b1110'0000 ) >> 5 );
+    const MappableInstructionFunctionPtr ptr = INSTRUCTION_MAP.at( instruction );
+    return ( this->*ptr )( address );
+}
+
+short Cpu::ExecuteInstructionCC10( byte opcode )
+{
+    const byte instruction = ( ( ( opcode & 0b1110'0000 ) >> 3 ) | ( opcode & 0b0000'0011 ) );
+    const byte addressingMode = ( opcode & 0b0001'1100 ) >> 2;
+
+
+    /* TODO (Jonathan): Implement proper cycle timing */
+    return 0;
 }
 
 short Cpu::ExecuteSingleByteInstruction( byte opcode )
@@ -123,6 +185,7 @@ short Cpu::ExecuteSingleByteInstruction( byte opcode )
         { 0xEA, &Cpu::NOP },
     };
 
+
     const InstructionFunctionPtr instruction = INSTRUCTION_MAP.at( opcode );
     return ( this->*instruction )();
 }
@@ -130,6 +193,97 @@ short Cpu::ExecuteSingleByteInstruction( byte opcode )
 byte Cpu::GetNextOpcode()
 {
     return memory->Read( PC.value++ );
+}
+
+
+/* ------------------- ADDRESSING MODES -------------------*/
+
+
+word Cpu::GetImmediateAddress()
+{
+    return PC.value++;
+}
+
+word Cpu::GetZeroPageAddress()
+{
+    const byte pageDisplacement = memory->Read( PC.value );
+    ++PC.value;
+
+    return static_cast< word >( pageDisplacement );
+}
+
+word Cpu::GetZeroPageAddressX()
+{
+    const byte pageDisplacement = memory->Read( PC.value );
+    ++PC.value;
+
+    return static_cast< word >( pageDisplacement + xRegisterIndex );
+}
+
+word Cpu::GetZeroPageAddressY()
+{
+    const byte pageDisplacement = memory->Read( PC.value );
+    ++PC.value;
+
+    return static_cast< word >( pageDisplacement + yRegisterIndex );
+}
+
+word Cpu::GetAbsoluteAddress()
+{
+    Register address;
+    address.low = memory->Read( PC.value );
+    ++PC.value;
+    address.hi = memory->Read( PC.value );
+    ++PC.value;
+
+    return address.value;
+}
+
+word Cpu::GetAbsoluteAddressX()
+{
+    Register address;
+    address.low = memory->Read( PC.value );
+    ++PC.value;
+    address.hi = memory->Read( PC.value );
+    ++PC.value;
+
+    return address.value + xRegisterIndex;
+}
+
+word Cpu::GetAbsoluteAddressY()
+{
+    Register address;
+    address.low = memory->Read( PC.value );
+    ++PC.value;
+    address.hi = memory->Read( PC.value );
+    ++PC.value;
+
+    return address.value + yRegisterIndex;
+}
+
+word Cpu::GetIndexedAddressX()
+{
+    const byte indexDisplacement = memory->Read( PC.value );
+    ++PC.value;
+    
+    const word totalDisplacement = ( ( indexDisplacement + xRegisterIndex ) & 0xFF );
+    Register address;
+    address.low = memory->Read( totalDisplacement );
+    address.hi = memory->Read( totalDisplacement + 1 );
+
+    return address.value;
+}
+
+word Cpu::GetIndexedAddressY()
+{
+    const byte indexDisplacement = memory->Read( PC.value );
+    ++PC.value;
+
+    Register address;
+    address.low = memory->Read( indexDisplacement );
+    address.hi = memory->Read( indexDisplacement + 1 );
+    
+    return address.value + yRegisterIndex;
 }
 
 
@@ -156,6 +310,167 @@ word Cpu::GetAbsoluteStackAddress() const
     return 0x0100 + stackPointer;
 }
 
+
+/* ------------------- MAPPABLE INSTRUCTIONS -------------------*/
+
+short Cpu::ORA( word address )
+{
+    const byte data = memory->Read( address );
+    accumulator |= data;
+
+    if ( accumulator == 0x00 )
+    {
+        RaiseFlag( Cpu::Flags::Zero );
+    }
+
+    if ( (accumulator & 0b1000'0000) == 0b1000'0000 )
+    {
+        RaiseFlag( Cpu::Flags::Negative );
+    }
+
+    return 1;
+}
+
+short Cpu::AND( word address )
+{
+    const byte data = memory->Read( address );
+    accumulator &= data;
+
+    if ( accumulator == 0x00 )
+    {
+        RaiseFlag( Cpu::Flags::Zero );
+    }
+
+    if ( (accumulator & 0b1000'0000) == 0b1000'0000 )
+    {
+        RaiseFlag( Cpu::Flags::Negative );
+    }
+
+    return 1;
+}
+
+short Cpu::EOR( word address )
+{
+    const byte data = memory->Read( address );
+    accumulator ^= data;
+
+    if ( accumulator == 0x00 )
+    {
+        RaiseFlag( Cpu::Flags::Zero );
+    }
+
+    if ( (accumulator & 0b1000'0000) == 0b1000'0000 )
+    {
+        RaiseFlag( Cpu::Flags::Negative );
+    }
+
+    return 1;
+}
+
+short Cpu::ADC( word address )
+{
+    const byte data = memory->Read( address );
+    const byte carryValue = IsFlagSet( Cpu::Flags::Carry ) ? 0x01 : 0x00; 
+ 
+    if ( accumulator + data + carryValue > 0xFF )
+    {
+        RaiseFlag( Cpu::Flags::Carry );
+    }
+ 
+    if ( ( accumulator & 0b1000'0000 ) !=  ( ( accumulator + data + carryValue ) & 0b1000'0000 ) )
+    {
+        RaiseFlag( Cpu::Flags::Overflow );
+    }
+
+    accumulator = accumulator + data + carryValue;
+
+    if ( accumulator == 0x00 )
+    {
+        RaiseFlag( Cpu::Flags::Zero );
+    }
+
+    if ( (accumulator & 0b1000'0000) == 0b1000'0000 )
+    {
+        RaiseFlag( Cpu::Flags::Negative );
+    }
+
+    return 1;
+}
+
+short Cpu::STA( word address )
+{
+    memory->Write( address, accumulator );
+    return 2;
+}
+
+short Cpu::LDA( word address )
+{
+    accumulator = memory->Read( address );
+
+    if ( accumulator == 0x00 )
+    {
+        RaiseFlag( Cpu::Flags::Zero );
+    }
+
+    if ( (accumulator & 0b1000'0000) == 0b1000'0000 )
+    {
+        RaiseFlag( Cpu::Flags::Negative );
+    }
+
+    return 1;
+}
+
+short Cpu::CMP( word address )
+{
+    const byte data = memory->Read( address );
+
+    if ( accumulator >= data )
+    {
+        RaiseFlag( Cpu::Flags::Carry );
+    }
+
+    if ( accumulator == data )
+    {
+        RaiseFlag( Cpu::Flags::Zero );
+    }
+
+    if ( (accumulator & 0b1000'0000) == 0b1000'0000 )
+    {
+        RaiseFlag( Cpu::Flags::Negative );
+    }
+
+    return 1;
+}
+
+short Cpu::SBC( word address )
+{
+    const byte data = memory->Read( address );
+    const byte carryValue = 0x01 - ( IsFlagSet( Cpu::Flags::Carry ) ? 0x01 : 0x00 ); 
+
+    if ( accumulator - data - carryValue > 0xFF )
+    {
+        RaiseFlag( Cpu::Flags::Carry );
+    }    
+
+    if ( ( accumulator & 0b1000'0000 ) !=  ( ( accumulator - data - carryValue ) & 0b1000'0000 ) )
+    {
+        RaiseFlag( Cpu::Flags::Overflow );
+    } 
+
+    accumulator = accumulator - data - carryValue;
+
+    if ( accumulator == 0x00 )
+    {
+        RaiseFlag( Cpu::Flags::Zero );
+    }
+
+    if ( (accumulator & 0b1000'0000) == 0b1000'0000 )
+    {
+        RaiseFlag( Cpu::Flags::Negative );
+    }
+
+    return 1;
+}
 
 /* ------------------- INSTRUCTIONS -------------------*/
 
