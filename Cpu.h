@@ -50,5 +50,10 @@ private:
     word GetAbsoluteStackAddress() const;
 
     /* Opcode handling */
-    byte GetNextOpcode() const;
+    byte GetNextOpcode();
+    short ExecuteInstruction( byte opcode );
+    short ExecuteBranchInstruction( byte opcode );
+    short ExecuteMappableInstruction( byte opcode );
+    short ExecuteSingleByteInstruction( byte opcode );
+
 };

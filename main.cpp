@@ -15,10 +15,17 @@ int main(int argc, char** argv)
     Cartridge cartridge( argv[1] );
     if ( cartridge.IsLoaded() )
     {
+        cartridge.PrintDetails();
+
         Memory memory( &cartridge );
         Cpu cpu( &memory );
-        cpu.Update();
-        cartridge.PrintDetails();
+        
+        short currentCycles = 0;
+        while (currentCycles < 1000)
+        {
+            currentCycles += cpu.Update();
+        }
+
         return 0;
     }
 
