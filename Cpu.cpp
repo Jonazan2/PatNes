@@ -134,6 +134,7 @@ short Cpu::ExecuteInstructionCC01( byte opcode )
         case 0b0000'0010: { address = GetImmediateAddress();    break; }
         case 0b0000'0011: { address = GetAbsoluteAddress();     break; }
         case 0b0000'0100: { address = GetIndexedAddressY();     break; }
+        case 0b0000'0101: { address = GetZeroPageAddressX();    break; }
         case 0b0000'0110: { address = GetAbsoluteAddressY();    break; }
         case 0b0000'0111: { address = GetAbsoluteAddressX();    break; }
     }
@@ -145,9 +146,8 @@ short Cpu::ExecuteInstructionCC01( byte opcode )
 
 short Cpu::ExecuteInstructionCC10( byte opcode )
 {
-    const byte instruction = ( ( ( opcode & 0b1110'0000 ) >> 3 ) | ( opcode & 0b0000'0011 ) );
+    const byte instruction = ( ( opcode & 0b1110'0000 ) >> 5 );
     const byte addressingMode = ( opcode & 0b0001'1100 ) >> 2;
-
 
     /* TODO (Jonathan): Implement proper cycle timing */
     return 0;
