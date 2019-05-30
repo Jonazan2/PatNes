@@ -2,7 +2,9 @@
 
 #include "Cpu.h"
 
+#include <assert.h>
 #include <array>
+#include <unordered_map>
 
 #include "Memory.h"
 
@@ -43,9 +45,9 @@ short Cpu::ExecuteInstruction( byte opcode )
         return ExecuteBranchInstruction( opcode );
     }
     
-    /* Check if it is a regular aaabbbcc instruction */    
-    const byte instructionMask = opcode & 0b0000'0011;
-    if ( instructionMask != 0b0000'0011 )
+    /* Check if it is a regular aaabbbcc instruction */
+    const byte mappableInstructionMask = opcode & 0b0000'0011;
+    if ( mappableInstructionMask != 0b0000'0011 )
     {
         return ExecuteMappableInstruction( opcode );
     }
@@ -91,10 +93,47 @@ short Cpu::ExecuteMappableInstruction( byte opcode )
 
 short Cpu::ExecuteSingleByteInstruction( byte opcode )
 {
+    static const std::unordered_map< byte, InstructionFunctionPtr > INSTRUCTION_MAP =
+    {
+        { 0x08, &Cpu::PHP },
+        { 0x18, &Cpu::CLC },
+        { 0x28, &Cpu::PLP },
+        { 0x38, &Cpu::SEC },
 
-    /* TODO (Jonathan): Implement proper cycle timing */
-    return 0;
+        { 0x48, &Cpu::PHA },
+        { 0x58, &Cpu::CLI },
+        { 0x68, &Cpu::PLA },
+        { 0x78, &Cpu::SEI },
+
+        { 0x88, &Cpu::DEY },
+        { 0x8A, &Cpu::TXA },
+        { 0x98, &Cpu::TYA },
+        { 0x9A, &Cpu::TXS },
+
+        { 0xA8, &Cpu::TAY },
+        { 0xAA, &Cpu::TAX },
+        { 0xB8, &Cpu::CLV },
+        { 0xBA, &Cpu::TSX },
+
+        { 0xC8, &Cpu::INY },
+        { 0xCA, &Cpu::DEX },
+        { 0xD8, &Cpu::CLD },
+        { 0xE8, &Cpu::INX },
+
+        { 0xEA, &Cpu::NOP },
+    };
+
+    const InstructionFunctionPtr instruction = INSTRUCTION_MAP.at( opcode );
+    return ( this->*instruction )();
 }
+
+byte Cpu::GetNextOpcode()
+{
+    return memory->Read( PC.value++ );
+}
+
+
+/* ------------------- FLAGS -------------------*/
 
 bool Cpu::IsFlagSet( Flags flag ) const
 {
@@ -117,7 +156,137 @@ word Cpu::GetAbsoluteStackAddress() const
     return 0x0100 + stackPointer;
 }
 
-byte Cpu::GetNextOpcode()
-{
-    return memory->Read( PC.value++ );
+
+/* ------------------- INSTRUCTIONS -------------------*/
+
+short Cpu::PHP() 
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::PLP()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::PHA()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::PLA()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::DEY()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::DEX()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::INY()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::INX()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::CLC()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::SEC()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::CLI()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::SEI()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::CLV()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::CLD()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::SED()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::TAY()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::TYA()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::TXA()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::TXS()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::TAX()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::TSX()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::NOP()
+{ 
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
 }

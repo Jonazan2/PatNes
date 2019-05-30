@@ -35,6 +35,8 @@ public:
 
 private:
 
+    using InstructionFunctionPtr = short (Cpu::*)(); 
+
     /* Registers */
     Register    PC;
     byte        stackPointer;
@@ -44,7 +46,7 @@ private:
     byte        yRegisterIndex;
 
     /* Systems */
-    Memory *memory;
+    Memory      *memory;
 
     /* Stack operations */
     word GetAbsoluteStackAddress() const;
@@ -55,5 +57,34 @@ private:
     short ExecuteBranchInstruction( byte opcode );
     short ExecuteMappableInstruction( byte opcode );
     short ExecuteSingleByteInstruction( byte opcode );
+
+    /* Individual instructions */
+    short PHP();
+    short PLP();
+    short PHA();
+    short PLA();
+
+    short DEY();
+    short DEX();
+    short INY();
+    short INX();
+
+    short CLC();
+    short SEC();
+    short CLI();
+    short SEI();
+
+    short CLV();
+    short CLD();
+    short SED();
+
+    short TAY();
+    short TYA();
+    short TXA();
+    short TXS();
+    short TAX();
+    short TSX();
+
+    short NOP();
 
 };
