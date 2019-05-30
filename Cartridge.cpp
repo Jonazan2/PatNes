@@ -54,7 +54,7 @@ bool Cartridge::TryLoad( const char* romFile )
 
 bool Cartridge::TryLoadHeader()
 {
-    static constexpr ui64 ROM_CONSTANT_HEADER = 0x4E45531A;
+    static constexpr u64 ROM_CONSTANT_HEADER = 0x4E45531A;
 
     if ( rom == nullptr )
     {
@@ -67,7 +67,7 @@ bool Cartridge::TryLoadHeader()
         return false;
     }
 
-    ui64 constant = 0;
+    u64 constant = 0;
     for ( byte i = 0x00; i <= 0x03; ++i )
     {
         constant <<= 8;
@@ -79,8 +79,8 @@ bool Cartridge::TryLoadHeader()
         return false;
     }
 
-    header.prgRomSizeKB = static_cast<ui32>( rom[ 0x04 ] ) * 16;
-    header.chrRomSizeKB = static_cast<ui32>( rom[ 0x05 ] ) * 8;
+    header.prgRomSizeKB = static_cast< u32 >( rom[ 0x04 ] ) * 16;
+    header.chrRomSizeKB = static_cast< u32 >( rom[ 0x05 ] ) * 8;
 
     /* Flags 6 */
     header.mirroringType = MirroringType( rom[ 0x06 ] & 0b0000'0001 );
@@ -108,7 +108,17 @@ void Cartridge::PrintDetails() const
         << "Contains PRG RAM: " << header.hasPRGRam << "\n"
         << "Contains 512B trainer: " << header.has512BTrainer << "\n"
         << "Ignores Mirroring: " << header.ignoreMirroring << "\n"
-        << "Mapper: " << static_cast< ui32 >( header.mapper );
+        << "Mapper: " << static_cast< u32 >( header.mapper );
 
     std::cout << std::endl;
+}
+
+const Cartridge::Header& Cartridge::GetHeader() const
+{
+    return header;
+}
+
+const byte* const Cartridge::GetRom() const
+{
+    return rom;
 }

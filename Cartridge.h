@@ -25,8 +25,8 @@ public:
 
     struct Header
     {
-        ui32                        prgRomSizeKB;
-        ui32                        chrRomSizeKB;
+        u32                        prgRomSizeKB;
+        u32                        chrRomSizeKB;
         Cartridge::MirroringType    mirroringType;
         bool                        hasPersistentMemory;
         bool                        hasPRGRam;
@@ -53,10 +53,12 @@ public:
 
     void PrintDetails() const;
     bool IsLoaded() const;    
+    const Header& GetHeader() const;
+    const byte * const GetRom() const;
 
 private:
 
-    ui32                cartridgeSize;
+    u32                 cartridgeSize;
     const char*         romFileName;
     byte*               rom;
     bool                isLoaded;

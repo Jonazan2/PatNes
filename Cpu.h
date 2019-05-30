@@ -2,6 +2,9 @@
 
 #include "Types.h"
 
+
+class Memory;
+
 class Cpu
 {
 public:
@@ -20,7 +23,9 @@ public:
     };
 
 
-    Cpu() = default;
+    Cpu( Memory *memory );
+
+    void Reset();
 
     word Update();
 
@@ -38,8 +43,12 @@ private:
     byte        xRegisterIndex;
     byte        yRegisterIndex;
 
+    /* Systems */
+    Memory *memory;
 
     /* Stack operations */
     word GetAbsoluteStackAddress() const;
 
+    /* Opcode handling */
+    byte GetNextOpcode() const;
 };

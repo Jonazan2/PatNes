@@ -1,6 +1,8 @@
 #include <iostream>
 
 #include "Cartridge.h"
+#include "Memory.h"
+#include "Cpu.h"
 
 int main(int argc, char** argv)
 {
@@ -13,6 +15,9 @@ int main(int argc, char** argv)
     Cartridge cartridge( argv[1] );
     if ( cartridge.IsLoaded() )
     {
+        Memory memory( &cartridge );
+        Cpu cpu( &memory );
+        cpu.Update();
         cartridge.PrintDetails();
         return 0;
     }
