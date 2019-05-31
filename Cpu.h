@@ -32,6 +32,7 @@ public:
     bool IsFlagSet( Flags flag ) const;
     void RaiseFlag( Flags flag );
     void ToggleFlag( Flags flag );
+    void ClearFlag( Flags flag );
 
 private:
 
@@ -82,6 +83,19 @@ private:
     short LDA( word address );
     short CMP( word address );
     short SBC( word address );
+
+    short ASL( word address );
+    short ROL( word address );
+    short LSR( word address );
+    short ROR( word address );
+    short STX( word address );
+    short LDX( word address );
+    short DEC( word address );
+    short INC( word address );
+    short ASLA();
+    short ROLA();
+    short LSRA();
+    short RORA();
 
     /* Individual instructions */
     short PHP();

@@ -83,8 +83,6 @@ short Cpu::ExecuteBranchInstruction( byte opcode )
 short Cpu::ExecuteMappableInstruction( byte opcode )
 {
     /* These instructions follow the aaabbbcc pattern where 'aaa/cc' specifies the instruction and 'bbb' the address mode */
-    const byte instruction = ( ( ( opcode & 0b1110'0000 ) >> 3 ) | ( opcode & 0b0000'0011 ) );
-
     switch ( opcode & 0b0000'0011 )
     {
         case 0b0000'0000: { return ExecuteInstructionCC00( opcode ); }
@@ -146,11 +144,74 @@ short Cpu::ExecuteInstructionCC01( byte opcode )
 
 short Cpu::ExecuteInstructionCC10( byte opcode )
 {
+
+    static const std::unordered_map< byte, MappableInstructionFunctionPtr > INSTRUCTION_MAP =
+    {
+        { 0x00, &Cpu::ASL },
+        { 0x01, &Cpu::ROL },
+        { 0x02, &Cpu::LSR },
+        { 0x03, &Cpu::ROR },
+
+        { 0x04, &Cpu::STX },
+        { 0x05, &Cpu::LDX },
+        { 0x06, &Cpu::DEC },
+        { 0x07, &Cpu::INC }
+    };
+
+    static const std::unordered_map< byte, InstructionFunctionPtr > ACCUMULATOR_MODE_INSTRUCTION_MAP =
+    {
+        { 0x00, &Cpu::ASLA },
+        { 0x01, &Cpu::ROLA },
+        { 0x02, &Cpu::LSRA },
+        { 0x03, &Cpu::RORA },
+    };
+
     const byte instruction = ( ( opcode & 0b1110'0000 ) >> 5 );
     const byte addressingMode = ( opcode & 0b0001'1100 ) >> 2;
+    if ( addressingMode == 0b0000'0010 )
+    {
+        /* we handle the accumulator mode with the map directly by having separated instructions */
+        const InstructionFunctionPtr ptr = ACCUMULATOR_MODE_INSTRUCTION_MAP.at( instruction );
+        return ( this->*ptr )();
+    }
+    else
+    {
+        word address;
+        switch ( addressingMode )
+        {
+            case 0b0000'0000: { address = GetImmediateAddress();    break; }
+            case 0b0000'0001: { address = GetZeroPageAddress();     break; }
+            case 0b0000'0011: { address = GetAbsoluteAddress();     break; }
 
-    /* TODO (Jonathan): Implement proper cycle timing */
-    return 0;
+            case 0b0000'0110: 
+            { 
+                if ( instruction == 0x04 || instruction == 0x05 )
+                {
+                    address = GetZeroPageAddressY();
+                }
+                else
+                {
+                    address = GetZeroPageAddressX();
+                }
+                break;
+            }
+            case 0b0000'0111:
+            { 
+                if ( instruction == 0x04 || instruction == 0x05 )
+                {
+                    address = GetAbsoluteAddressY();
+                }
+                else
+                {
+                    address = GetAbsoluteAddressX();
+                }
+                break;
+            }
+        }
+
+        const MappableInstructionFunctionPtr ptr = INSTRUCTION_MAP.at( instruction );
+        return ( this->*ptr )( address );
+    }
 }
 
 short Cpu::ExecuteSingleByteInstruction( byte opcode )
@@ -301,8 +362,12 @@ void Cpu::RaiseFlag(Flags flag)
 
 void Cpu::ToggleFlag( Flags flag )
 {
-
     pRegister = pRegister ^ static_cast< byte >( flag );
+}
+
+void Cpu::ClearFlag( Flags flag )
+{
+    pRegister = pRegister & ~( static_cast< byte >( flag ) );
 }
 
 word Cpu::GetAbsoluteStackAddress() const
@@ -318,15 +383,9 @@ short Cpu::ORA( word address )
     const byte data = memory->Read( address );
     accumulator |= data;
 
-    if ( accumulator == 0x00 )
-    {
-        RaiseFlag( Cpu::Flags::Zero );
-    }
+    ( accumulator == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
 
-    if ( (accumulator & 0b1000'0000) == 0b1000'0000 )
-    {
-        RaiseFlag( Cpu::Flags::Negative );
-    }
+    ( ( accumulator & 0b1000'0000 ) == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
 
     return 1;
 }
@@ -336,15 +395,9 @@ short Cpu::AND( word address )
     const byte data = memory->Read( address );
     accumulator &= data;
 
-    if ( accumulator == 0x00 )
-    {
-        RaiseFlag( Cpu::Flags::Zero );
-    }
+    ( accumulator == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
 
-    if ( (accumulator & 0b1000'0000) == 0b1000'0000 )
-    {
-        RaiseFlag( Cpu::Flags::Negative );
-    }
+    ( ( accumulator & 0b1000'0000 ) == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
 
     return 1;
 }
@@ -354,15 +407,9 @@ short Cpu::EOR( word address )
     const byte data = memory->Read( address );
     accumulator ^= data;
 
-    if ( accumulator == 0x00 )
-    {
-        RaiseFlag( Cpu::Flags::Zero );
-    }
+    ( accumulator == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
 
-    if ( (accumulator & 0b1000'0000) == 0b1000'0000 )
-    {
-        RaiseFlag( Cpu::Flags::Negative );
-    }
+    ( ( accumulator & 0b1000'0000 ) == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
 
     return 1;
 }
@@ -376,23 +423,25 @@ short Cpu::ADC( word address )
     {
         RaiseFlag( Cpu::Flags::Carry );
     }
+    else
+    {
+        ClearFlag( Cpu::Flags::Carry );
+    }
  
     if ( ( accumulator & 0b1000'0000 ) !=  ( ( accumulator + data + carryValue ) & 0b1000'0000 ) )
     {
         RaiseFlag( Cpu::Flags::Overflow );
     }
+    else
+    {
+        ClearFlag( Cpu::Flags::Overflow );
+    }
 
     accumulator = accumulator + data + carryValue;
 
-    if ( accumulator == 0x00 )
-    {
-        RaiseFlag( Cpu::Flags::Zero );
-    }
+    ( accumulator == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
 
-    if ( (accumulator & 0b1000'0000) == 0b1000'0000 )
-    {
-        RaiseFlag( Cpu::Flags::Negative );
-    }
+    ( ( accumulator & 0b1000'0000 ) == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
 
     return 1;
 }
@@ -407,15 +456,9 @@ short Cpu::LDA( word address )
 {
     accumulator = memory->Read( address );
 
-    if ( accumulator == 0x00 )
-    {
-        RaiseFlag( Cpu::Flags::Zero );
-    }
+    ( accumulator == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
 
-    if ( (accumulator & 0b1000'0000) == 0b1000'0000 )
-    {
-        RaiseFlag( Cpu::Flags::Negative );
-    }
+    ( (accumulator & 0b1000'0000) == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
 
     return 1;
 }
@@ -424,20 +467,12 @@ short Cpu::CMP( word address )
 {
     const byte data = memory->Read( address );
 
-    if ( accumulator >= data )
-    {
-        RaiseFlag( Cpu::Flags::Carry );
-    }
+    ( accumulator >= data ) ? RaiseFlag( Cpu::Flags::Carry ) : ClearFlag( Cpu::Flags::Carry );
 
-    if ( accumulator == data )
-    {
-        RaiseFlag( Cpu::Flags::Zero );
-    }
+    ( accumulator == data ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero ) ;
 
-    if ( (accumulator & 0b1000'0000) == 0b1000'0000 )
-    {
-        RaiseFlag( Cpu::Flags::Negative );
-    }
+    const byte substraction =  accumulator - data;
+    ( ( substraction & 0b1000'0000 ) == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
 
     return 1;
 }
@@ -447,29 +482,221 @@ short Cpu::SBC( word address )
     const byte data = memory->Read( address );
     const byte carryValue = 0x01 - ( IsFlagSet( Cpu::Flags::Carry ) ? 0x01 : 0x00 ); 
 
-    if ( accumulator - data - carryValue > 0xFF )
-    {
-        RaiseFlag( Cpu::Flags::Carry );
-    }    
+    ( accumulator - data - carryValue > 0xFF ) ? RaiseFlag( Cpu::Flags::Carry ) : ClearFlag( Cpu::Flags::Carry );
 
     if ( ( accumulator & 0b1000'0000 ) !=  ( ( accumulator - data - carryValue ) & 0b1000'0000 ) )
     {
         RaiseFlag( Cpu::Flags::Overflow );
-    } 
+    }
+    else
+    {
+        ClearFlag( Cpu::Flags::Overflow );
+    }
 
     accumulator = accumulator - data - carryValue;
 
-    if ( accumulator == 0x00 )
-    {
-        RaiseFlag( Cpu::Flags::Zero );
-    }
+    ( accumulator == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
 
-    if ( (accumulator & 0b1000'0000) == 0b1000'0000 )
-    {
-        RaiseFlag( Cpu::Flags::Negative );
-    }
+    ( (accumulator & 0b1000'0000) == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
 
     return 1;
+}
+
+short Cpu::ASL( word address )
+{
+    const byte data = memory->Read( address );
+
+    const byte bit7 = data & 0b1000'0000;
+    ( bit7 == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Carry ) : ClearFlag( Cpu::Flags::Carry );
+
+    const byte result = data << 1;
+    ( result == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    const byte bit7result = result & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    memory->Write( address, result );
+
+    return 2;
+}
+
+short Cpu::ASLA()
+{
+    const byte bit7 = accumulator & 0b1000'0000;
+    ( bit7 == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Carry ) : ClearFlag( Cpu::Flags::Carry );
+
+    const byte result = accumulator << 1;
+    ( result == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    const byte bit7result = result & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    accumulator = result;
+
+    return 2;
+}
+
+short Cpu::ROL( word address )
+{
+    const byte data = memory->Read( address );
+
+    const byte oldCarry = IsFlagSet( Cpu::Flags::Carry ) ? 0x01 : 0x00;
+    
+    const byte bit7 = data & 0b1000'0000;
+    ( bit7 == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Carry ) : ClearFlag( Cpu::Flags::Carry );
+
+    byte result = data << 1;
+    result &= oldCarry;
+
+    ( result == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    const byte bit7result = result & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    memory->Write( address, result );
+
+    return 2;
+}
+
+short Cpu::ROLA()
+{
+    const byte oldCarry = IsFlagSet( Cpu::Flags::Carry ) ? 0x01 : 0x00;
+
+    const byte bit7 = accumulator & 0b1000'0000;
+    ( bit7 == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Carry ) : ClearFlag( Cpu::Flags::Carry );
+
+    byte result = accumulator << 1;
+    result &= oldCarry;
+
+    ( result == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    const byte bit7result = result & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    accumulator = result;
+
+    return 2;
+}
+
+short Cpu::LSR( word address )
+{
+    const byte data = memory->Read( address );
+
+    const byte bit0 = data & 0b0000'0001;
+    ( bit0 == 0b0000'0001 ) ? RaiseFlag( Cpu::Flags::Carry ) : ClearFlag( Cpu::Flags::Carry );
+
+    const byte result = data >> 1;
+
+    ( result == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+ 
+    const byte bit7result = result & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    memory->Write( address, result );
+
+    return 2;
+}
+
+short Cpu::LSRA()
+{
+    const byte bit0 = accumulator & 0b0000'0001;
+    ( bit0 == 0b0000'0001 ) ? RaiseFlag( Cpu::Flags::Carry ) : ClearFlag( Cpu::Flags::Carry );
+
+    const byte result = accumulator >> 1;
+
+    ( result == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    const byte bit7result = result & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    accumulator = result;
+
+    return 2;
+}
+
+short Cpu::ROR( word address )
+{
+    const byte data = memory->Read( address );
+    const byte oldCarry = IsFlagSet( Cpu::Flags::Carry ) ? 0b1000'0000 : 0b0000'0000;
+    const byte bit0 = data & 0b0000'0001;
+
+    byte result = data >> 1;
+    result &= oldCarry;
+
+    ( bit0 == 0b0000'0001 ) ? RaiseFlag( Cpu::Flags::Carry ) : ClearFlag( Cpu::Flags::Carry );
+
+    const byte bit7result = result & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    ( result == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    memory->Write( address, result );
+
+    return 2;
+}
+
+short Cpu::RORA()
+{
+    const byte oldCarry = IsFlagSet( Cpu::Flags::Carry ) ? 0b1000'0000 : 0b0000'0000;
+    const byte bit0 = accumulator & 0b0000'0001;
+
+    byte result = accumulator >> 1;
+    result &= oldCarry;
+
+    ( bit0 == 0b0000'0001 ) ? RaiseFlag( Cpu::Flags::Carry ) : ClearFlag( Cpu::Flags::Carry );
+
+    const byte bit7result = result & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    ( result == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    accumulator = result;
+
+    return 2;
+}
+
+short Cpu::STX( word address )
+{
+    memory->Write( address, xRegisterIndex );
+    return 1;
+}
+
+short Cpu::LDX( word address )
+{
+    xRegisterIndex = memory->Read( address );
+
+    ( xRegisterIndex == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    const byte bit7result = xRegisterIndex & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    return 1;
+}
+
+short Cpu::DEC( word address )
+{
+    const byte data = memory->Read( address );
+    const byte result = data - 1;
+    
+    ( result == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+    
+    const byte bit7result = result & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+    
+    return 3;
+}
+
+short Cpu::INC( word address )
+{
+    const byte data = memory->Read( address );
+    const byte result = data - 1;
+
+    ( result == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    const byte bit7result = result & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    return 3;
 }
 
 /* ------------------- INSTRUCTIONS -------------------*/
