@@ -897,43 +897,43 @@ short Cpu::INX()
 
 short Cpu::CLC()
 { 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+    ClearFlag( Cpu::Flags::Carry );
+    return 2; 
 }
 
 short Cpu::SEC()
-{ 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+{
+    RaiseFlag( Cpu::Flags::Carry );
+    return 2; 
 }
 
 short Cpu::CLI()
 { 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+    ClearFlag( Cpu::Flags::InterruptDisable );
+    return 2; 
 }
 
 short Cpu::SEI()
 { 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+    RaiseFlag( Cpu::Flags::InterruptDisable );
+    return 2; 
 }
 
 short Cpu::CLV()
 { 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+    ClearFlag( Cpu::Flags::Overflow );
+    return 2; 
 }
 
 short Cpu::CLD()
 { 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+    ClearFlag( Cpu::Flags::DecimalMode );
+    return 2; 
 }
 
 short Cpu::SED()
 { 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    RaiseFlag( Cpu::Flags::DecimalMode );
     return 0; 
 }
 
@@ -975,6 +975,5 @@ short Cpu::TSX()
 
 short Cpu::NOP()
 { 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+    return 2;
 }
