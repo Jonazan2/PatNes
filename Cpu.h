@@ -141,4 +141,7 @@ private:
     short TSX();
 
     short NOP();
+
+    /* Instructions helper functions */
+    void TransferRegister( byte &lhs, byte rhs );
 };

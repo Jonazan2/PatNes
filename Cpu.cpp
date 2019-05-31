@@ -938,39 +938,50 @@ short Cpu::SED()
 }
 
 short Cpu::TAY()
-{ 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+{
+    TransferRegister( yRegisterIndex, accumulator );
+    return 2;
 }
 
 short Cpu::TYA()
 { 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+    TransferRegister( accumulator, yRegisterIndex );
+    return 2;
 }
 
 short Cpu::TXA()
 { 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+    TransferRegister( accumulator, xRegisterIndex );
+    return 2;
 }
 
 short Cpu::TXS()
-{ 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+{
+    stackPointer = xRegisterIndex;
+    return 2;
 }
 
 short Cpu::TAX()
 { 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+    TransferRegister( xRegisterIndex, accumulator );
+    return 2;
 }
 
 short Cpu::TSX()
-{ 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+{
+    TransferRegister( xRegisterIndex, stackPointer );
+    return 2;
+}
+
+void Cpu::TransferRegister( byte &lhs, byte rhs )
+{
+    lhs = rhs;
+
+    ( lhs == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    const byte bit7result = lhs & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
 }
 
 short Cpu::NOP()
