@@ -56,6 +56,7 @@ private:
     /* Opcode handling */
     byte GetNextOpcode();
     short ExecuteInstruction( byte opcode );
+    short ExecuteSubroutineOrInterruptInstruction( byte opcode );
     short ExecuteBranchInstruction( byte opcode );
     short ExecuteMappableInstruction( byte opcode );
     short ExecuteInstructionCC00( byte opcode );
@@ -97,7 +98,22 @@ private:
     short LSRA();
     short RORA();
 
+    short BIT( word address );
+    short JMP( word address );
+    short JMPA( word address );
+    short STY( word address );
+    short LDY( word address );
+    short CPY( word address );
+    short CPX( word address );
+
+    /* Interrupt and subroutine instructions */
+    short BRK();
+    short JSR();
+    short RTI();
+    short RTS();
+
     /* Individual instructions */
+
     short PHP();
     short PLP();
     short PHA();
@@ -125,5 +141,4 @@ private:
     short TSX();
 
     short NOP();
-
 };

@@ -36,22 +36,42 @@ word Cpu::Update()
 
 short Cpu::ExecuteInstruction( byte opcode )
 {
+    /* Handle subroutine and interrupt instructions */
+    if ( opcode == 0x00 && opcode == 0x20 && opcode == 0x40 && opcode == 0x60 )
+    {
+        return ExecuteSubroutineOrInterruptInstruction( opcode );
+    }
+
     /* Check if it is a branch instruction with form 0bxxy1'0000 */
     static constexpr byte BRANCH_OPERATION_MASK = 0b0001'0000;
     if ( ( opcode & 0b0001'1111 ) == BRANCH_OPERATION_MASK )
     {
         return ExecuteBranchInstruction( opcode );
     }
-    
-    /* Check if it is a regular aaabbbcc instruction */
-    const byte mappableInstructionMask = opcode & 0b0000'0011;
-    if ( mappableInstructionMask != 0b0000'0011 )
+
+    /* Check if the instruction can't be mapped so it must be a single byte instruction */
+    const byte opcodeLowerNibble = opcode & 0b0000'1111;    
+    if ( opcodeLowerNibble == 0x08 || opcodeLowerNibble == 0x0A )
     {
-        return ExecuteMappableInstruction( opcode );
+        return ExecuteSingleByteInstruction( opcode );  
     }
 
-    /* The instruction can't be mapped, it must be a single byte instruction */
-    return ExecuteSingleByteInstruction( opcode );
+    /* It is a regular aaabbbcc instruction */
+    return ExecuteMappableInstruction( opcode );
+}
+
+short Cpu::ExecuteSubroutineOrInterruptInstruction( byte opcode )
+{
+    static const std::unordered_map< byte, InstructionFunctionPtr > INSTRUCTION_MAP =
+    {
+        { 0x00, &Cpu::BRK },
+        { 0x20, &Cpu::JSR },
+        { 0x40, &Cpu::RTI },
+        { 0x60, &Cpu::RTS },
+    };
+
+    const InstructionFunctionPtr instruction = INSTRUCTION_MAP.at( opcode );
+    return ( this->*instruction )();
 }
 
 short Cpu::ExecuteBranchInstruction( byte opcode )
@@ -98,12 +118,35 @@ short Cpu::ExecuteMappableInstruction( byte opcode )
 
 short Cpu::ExecuteInstructionCC00( byte opcode )
 {
-    const byte instruction = ( ( ( opcode & 0b1110'0000 ) >> 3 ) | ( opcode & 0b0000'0011 ) );
+    /* We only need the 'aaa' part of the instruction to map it since we already know that cc == 01 */
+    static const std::unordered_map< byte, MappableInstructionFunctionPtr > INSTRUCTION_MAP =
+    {
+        { 0x01, &Cpu::BIT },
+        { 0x02, &Cpu::JMP },
+        { 0x03, &Cpu::JMPA },
+
+        { 0x04, &Cpu::STY },
+        { 0x05, &Cpu::LDY },
+        { 0x06, &Cpu::CPY },
+        { 0x07, &Cpu::CPX }
+    };
+
+
+    word address;
     const byte addressingMode = ( opcode & 0b0001'1100 ) >> 2;
+    switch ( addressingMode )
+    {
+        case 0b0000'0000: { address = GetImmediateAddress();    break; }
+        case 0b0000'0001: { address = GetZeroPageAddress();     break; }
+        case 0b0000'0011: { address = GetAbsoluteAddress();     break; }
+        case 0b0000'0101: { address = GetZeroPageAddressX();    break; }
+        case 0b0000'0111: { address = GetAbsoluteAddressX();    break; }
+    }
 
 
-    /* TODO (Jonathan): Implement proper cycle timing */
-    return 0;
+    const byte instruction = ( ( opcode & 0b1110'0000 ) >> 5 );
+    const MappableInstructionFunctionPtr ptr = INSTRUCTION_MAP.at( instruction );
+    return ( this->*ptr )( address );
 }
 
 short Cpu::ExecuteInstructionCC01( byte opcode )
@@ -144,7 +187,6 @@ short Cpu::ExecuteInstructionCC01( byte opcode )
 
 short Cpu::ExecuteInstructionCC10( byte opcode )
 {
-
     static const std::unordered_map< byte, MappableInstructionFunctionPtr > INSTRUCTION_MAP =
     {
         { 0x00, &Cpu::ASL },
@@ -166,6 +208,7 @@ short Cpu::ExecuteInstructionCC10( byte opcode )
         { 0x03, &Cpu::RORA },
     };
 
+
     const byte instruction = ( ( opcode & 0b1110'0000 ) >> 5 );
     const byte addressingMode = ( opcode & 0b0001'1100 ) >> 2;
     if ( addressingMode == 0b0000'0010 )
@@ -183,7 +226,7 @@ short Cpu::ExecuteInstructionCC10( byte opcode )
             case 0b0000'0001: { address = GetZeroPageAddress();     break; }
             case 0b0000'0011: { address = GetAbsoluteAddress();     break; }
 
-            case 0b0000'0110: 
+            case 0b0000'0110:
             { 
                 if ( instruction == 0x04 || instruction == 0x05 )
                 {
@@ -196,7 +239,7 @@ short Cpu::ExecuteInstructionCC10( byte opcode )
                 break;
             }
             case 0b0000'0111:
-            { 
+            {
                 if ( instruction == 0x04 || instruction == 0x05 )
                 {
                     address = GetAbsoluteAddressY();
@@ -218,31 +261,29 @@ short Cpu::ExecuteSingleByteInstruction( byte opcode )
 {
     static const std::unordered_map< byte, InstructionFunctionPtr > INSTRUCTION_MAP =
     {
-        { 0x08, &Cpu::PHP },
         { 0x18, &Cpu::CLC },
         { 0x28, &Cpu::PLP },
         { 0x38, &Cpu::SEC },
-
         { 0x48, &Cpu::PHA },
+
         { 0x58, &Cpu::CLI },
         { 0x68, &Cpu::PLA },
         { 0x78, &Cpu::SEI },
-
         { 0x88, &Cpu::DEY },
+
         { 0x8A, &Cpu::TXA },
         { 0x98, &Cpu::TYA },
         { 0x9A, &Cpu::TXS },
-
         { 0xA8, &Cpu::TAY },
+
         { 0xAA, &Cpu::TAX },
         { 0xB8, &Cpu::CLV },
         { 0xBA, &Cpu::TSX },
-
         { 0xC8, &Cpu::INY },
+
         { 0xCA, &Cpu::DEX },
         { 0xD8, &Cpu::CLD },
         { 0xE8, &Cpu::INX },
-
         { 0xEA, &Cpu::NOP },
     };
 
@@ -698,6 +739,111 @@ short Cpu::INC( word address )
 
     return 3;
 }
+
+short Cpu::BIT( word address )
+{
+    const byte mask = memory->Read( address );
+    
+    const byte result = accumulator & mask;
+    ( result == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    ( ( mask & 0b1000'0000 )  == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Overflow ) : ClearFlag( Cpu::Flags::Overflow );
+
+    ( ( mask & 0b0100'0000 )  == 0b0100'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    return 2;
+}
+
+short Cpu::JMP( word address )
+{
+    PC.value = address;
+    
+    return 1;
+}
+
+short Cpu::JMPA( word address )
+{
+    Register finalAddress;
+    finalAddress.low = memory->Read( address );
+    finalAddress.hi = memory->Read( address + 1 );
+
+    PC = finalAddress;
+    return 3;
+}
+
+short Cpu::STY( word address )
+{
+    memory->Write( address, yRegisterIndex );
+    return 2;
+}
+
+short Cpu::LDY( word address )
+{
+    yRegisterIndex = memory->Read( address );
+
+    ( yRegisterIndex == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    const byte bit7result = yRegisterIndex & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    return 1;
+}
+
+short Cpu::CPY( word address )
+{
+    const byte data = memory->Read( address );
+
+    ( yRegisterIndex >= data ) ? RaiseFlag( Cpu::Flags::Carry ) : ClearFlag( Cpu::Flags::Carry );
+
+    ( yRegisterIndex == data ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero ) ;
+
+    const byte substraction =  yRegisterIndex - data;
+    ( ( substraction & 0b1000'0000 ) == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    return 1;
+}
+
+short Cpu::CPX( word address )
+{
+    const byte data = memory->Read( address );
+
+    ( xRegisterIndex >= data ) ? RaiseFlag( Cpu::Flags::Carry ) : ClearFlag( Cpu::Flags::Carry );
+
+    ( xRegisterIndex == data ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero ) ;
+
+    const byte substraction =  xRegisterIndex - data;
+    ( ( substraction & 0b1000'0000 ) == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    return 1;
+}
+
+
+/* ------------------- SUBROUTINE & INTERRUPT INSTRUCTIONS -------------------*/
+
+short Cpu::BRK()
+{
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
+short Cpu::JSR()
+{
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0;
+}
+
+short Cpu::RTI()
+{
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0;
+}
+
+short Cpu::RTS()
+{
+    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
+    return 0; 
+}
+
 
 /* ------------------- INSTRUCTIONS -------------------*/
 
