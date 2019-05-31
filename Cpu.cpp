@@ -822,28 +822,67 @@ short Cpu::CPX( word address )
 
 short Cpu::BRK()
 {
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+    /* We push the PC to the stack with the most significant part first since the stack grows downwards */
+    PushToStack( PC.hi );
+    PushToStack( PC.low );
+    PushToStack( pRegister );
+
+    Register irq;
+    irq.low = memory->Read( 0xFFFE );
+    irq.hi = memory->Read( 0xFFFF );
+
+    PC = irq;
+
+    RaiseFlag( Cpu::Flags::Break );
+
+    return 7;
 }
 
 short Cpu::JSR()
 {
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0;
+    Register previousPC = PC;
+    --previousPC.value;
+
+    PushToStack( previousPC.hi );
+    PushToStack( previousPC.low );
+
+    /* Push the address */
+    PC.value = GetAbsoluteAddress();
+
+    return 6;
 }
 
 short Cpu::RTI()
 {
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0;
+    PopFromStack( pRegister );
+    PopFromStack( PC.hi );
+    PopFromStack( PC.low );
+    return 6;
 }
 
 short Cpu::RTS()
 {
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+    Register storedPC;
+    PopFromStack( storedPC.hi );
+    PopFromStack( storedPC.low );
+
+    PC = storedPC;
+    ++PC.value;
+
+    return 6;
 }
 
+void Cpu::PushToStack( byte data )
+{
+    memory->Write( GetAbsoluteStackAddress(), data );
+    --stackPointer;
+}
+
+void Cpu::PopFromStack( byte &data )
+{
+    data = memory->Read( GetAbsoluteStackAddress() );
+    ++stackPointer;
+}
 
 /* ------------------- INSTRUCTIONS -------------------*/
 

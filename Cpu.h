@@ -144,4 +144,8 @@ private:
 
     /* Instructions helper functions */
     void TransferRegister( byte &lhs, byte rhs );
+
+    /* Stack management */
+    void PushToStack( byte data );
+    void PopFromStack( byte &data );
 };
