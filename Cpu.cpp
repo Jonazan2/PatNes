@@ -887,51 +887,75 @@ void Cpu::PopFromStack( byte &data )
 /* ------------------- INSTRUCTIONS -------------------*/
 
 short Cpu::PHP() 
-{ 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+{
+    PushToStack( pRegister );
+    return 3;
 }
 
 short Cpu::PLP()
-{ 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+{
+    PushToStack( pRegister );
+    return 4;
 }
 
 short Cpu::PHA()
 { 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+    PushToStack( accumulator );
+    return 3;
 }
 
 short Cpu::PLA()
 { 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+    PushToStack( accumulator );
+    return 4;
 }
 
 short Cpu::DEY()
-{ 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+{
+    --yRegisterIndex;
+
+    ( yRegisterIndex == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    const byte bit7result = yRegisterIndex & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    return 2;
 }
 
 short Cpu::DEX()
 { 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+    --xRegisterIndex;
+
+    ( xRegisterIndex == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    const byte bit7result = xRegisterIndex & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    return 2;
 }
 
 short Cpu::INY()
 { 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+    ++yRegisterIndex;
+
+    ( yRegisterIndex == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    const byte bit7result = yRegisterIndex & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    return 2;
 }
 
 short Cpu::INX()
-{ 
-    assert( false, "INSTRUCTION NOT IMPLEMENTED" );
-    return 0; 
+{
+    ++xRegisterIndex;
+
+    ( xRegisterIndex == 0x00 ) ? RaiseFlag( Cpu::Flags::Zero ) : ClearFlag( Cpu::Flags::Zero );
+
+    const byte bit7result = xRegisterIndex & 0b1000'0000;
+    ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    return 2;
 }
 
 short Cpu::CLC()
