@@ -37,7 +37,7 @@ word Cpu::Update()
 short Cpu::ExecuteInstruction( byte opcode )
 {
     /* Handle subroutine and interrupt instructions */
-    if ( opcode == 0x00 && opcode == 0x20 && opcode == 0x40 && opcode == 0x60 )
+    if ( opcode == 0x00 || opcode == 0x20 || opcode == 0x40 || opcode == 0x60 )
     {
         return ExecuteSubroutineOrInterruptInstruction( opcode );
     }
