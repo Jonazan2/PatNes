@@ -3,6 +3,8 @@
 #include "Cartridge.h"
 #include "Memory.h"
 #include "Cpu.h"
+#include "Debugger/Debugger.h"
+
 
 int main(int argc, char** argv)
 {
@@ -11,6 +13,9 @@ int main(int argc, char** argv)
         std::cout << "Please provide the rom path";
         return -1;
     }
+
+    Debugger debugger;
+    debugger.StartDebugger();
 
     Cartridge cartridge( argv[1] );
     if ( cartridge.IsLoaded() )
@@ -23,7 +28,8 @@ int main(int argc, char** argv)
         short currentCycles = 0;
         while (currentCycles < 1000)
         {
-            currentCycles += cpu.Update();
+            //currentCycles += cpu.Update();
+            debugger.Update(0.f, currentCycles);
         }
 
         return 0;
