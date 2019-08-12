@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <array>
 
 #include "Types.h"
 
@@ -20,40 +21,42 @@ enum class CpuAddressMode : byte
     Indirect,
     IndexedX,
     IndexedY,
+
+    MAX
 };
 
-static const std::unordered_map<CpuAddressMode, const char *> ADDRESS_MODE_STRING =
+constexpr std::array<const char *, static_cast< byte > ( CpuAddressMode::MAX ) > ADDRESS_MODE_STRING =
 {
-    { CpuAddressMode::Implicit,     "Implicit" },
-    { CpuAddressMode::Accumulator,  "Accumulator" },
-    { CpuAddressMode::Immediate,    "Immediate" },
-    { CpuAddressMode::ZeroPage,     "Zero Page" },
-    { CpuAddressMode::ZeroPageX,    "Zero Page X" },
-    { CpuAddressMode::ZeroPageY,    "Zero Page Y" },
-    { CpuAddressMode::Relative,     "Relative" },
-    { CpuAddressMode::Absolute,     "Absolute" },
-    { CpuAddressMode::AbsoluteX,    "Absolute X" },
-    { CpuAddressMode::AbsoluteY,    "Absolute Y" },
-    { CpuAddressMode::Indirect,     "Indirect" },
-    { CpuAddressMode::IndexedX,     "Indexed X" },
-    { CpuAddressMode::IndexedY,     "Indexed Y" },
+    "Implicit",
+    "Accumulator",
+    "Immediate",
+    "Zero Page",
+    "Zero Page X",
+    "Zero Page Y",
+    "Relative",
+    "Absolute",
+    "Absolute X",
+    "Absolute Y",
+    "Indirect",
+    "Indexed X",
+    "Indexed Y",
 };
 
-static const std::unordered_map<CpuAddressMode, byte> ADDRESS_MODE_OPCODE_LENGTH =
+constexpr std::array< byte, static_cast< byte > ( CpuAddressMode::MAX ) > ADDRESS_MODE_OPCODE_LENGTH =
 {
-    { CpuAddressMode::Implicit,     1 },
-    { CpuAddressMode::Accumulator,  1 },
-    { CpuAddressMode::Immediate,    2 },
-    { CpuAddressMode::ZeroPage,     2 },
-    { CpuAddressMode::ZeroPageX,    2 },
-    { CpuAddressMode::ZeroPageY,    2 },
-    { CpuAddressMode::Relative,     2 },
-    { CpuAddressMode::Absolute,     3 },
-    { CpuAddressMode::AbsoluteX,    3 },
-    { CpuAddressMode::AbsoluteY,    3 },
-    { CpuAddressMode::Indirect,     3 },
-    { CpuAddressMode::IndexedX,     2 },
-    { CpuAddressMode::IndexedY,     2 },
+    1,  /* CpuAddressMode::Implicit */
+    1,  /* CpuAddressMode::Accumulator */
+    2,  /* CpuAddressMode::Immediate */
+    2,  /* CpuAddressMode::ZeroPage */
+    2,  /* CpuAddressMode::ZeroPageX */
+    2,  /* CpuAddressMode::ZeroPageY */
+    2,  /* CpuAddressMode::Relative */
+    3,  /* CpuAddressMode::Absolute */
+    3,  /* CpuAddressMode::AbsoluteX */
+    3,  /* CpuAddressMode::AbsoluteY */
+    3,  /* CpuAddressMode::Indirect */
+    2,  /* CpuAddressMode::IndexedX */
+    2,  /* CpuAddressMode::IndexedY */
 };
 
 struct OpcodeInfo
