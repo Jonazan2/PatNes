@@ -1,6 +1,8 @@
 #include "Debugger.h"
 
 #include <unordered_map>
+#include <chrono>
+#include <thread>
 
 #include <GL/glew.h>
 #include <GL/glut.h>
@@ -62,10 +64,36 @@ void Debugger::CloseDebugger()
 
 void Debugger::Update( float deltaMilliseconds, u32 cycles )
 {
-    if ( cycles % 10000 )
+    if ( mode == DebuggerMode::RUNNING )
     {
-        ComposeView( cycles );
-        Render();
+        /* In normal mode just render the debugger at the same rate as the emulator: random number for now */
+        if ( cycles % 10000 )
+        {
+            ComposeView( cycles );
+            Render();
+        }
+    }
+    else
+    {
+        /* if the emulator has reached a breakpoint we render the debugger at 60fps */
+
+        std::chrono::time_point<std::chrono::high_resolution_clock> current, previous;
+        previous = std::chrono::high_resolution_clock::now();
+
+        while (mode != DebuggerMode::RUNNING )
+        {
+            current = std::chrono::high_resolution_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>> (current - previous);
+            previous = current;
+
+            ComposeView( cycles );
+            Render();
+
+            if ( elapsed.count() < 16.6f ) 
+            {
+                std::this_thread::sleep_for( std::chrono::duration< float, std::milli > ( 16.6F - elapsed.count() ) );
+            }
+        }
     }
 }
 
@@ -74,7 +102,7 @@ void Debugger::ComposeView( u32 cycles )
     glfwPollEvents();
     ImGuiGLFW::NewFrame();
 
-    cpuDebugger.ComposeView( *cpu, cycles );
+    cpuDebugger.ComposeView( *cpu, cycles, mode );
 }
 
 void Debugger::Render()

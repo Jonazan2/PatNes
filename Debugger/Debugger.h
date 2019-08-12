@@ -4,7 +4,8 @@
 #include "../Cpu.h"
 #include "CpuDebugger.h"
 
-enum class DebuggerMode : byte {
+enum class DebuggerMode : byte 
+{
     IDLE,
     BREAKPOINT,
     V_SYNC,
@@ -35,7 +36,6 @@ private:
     GLFWwindow      *window;
     DebuggerMode    mode;
 
-    void AddFlagCheckbox( Cpu::Flags flag, const char *name );
     void ComposeView( u32 cycles );
     void Render();
 };

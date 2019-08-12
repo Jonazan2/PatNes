@@ -5,13 +5,15 @@
 
 class Cpu;
 
+enum class DebuggerMode : byte;
+
 class CpuDebugger
 {
 public:
+    CpuDebugger();
 
-    CpuDebugger() = default;
-    CpuDebugger( CpuDebugger & ) = delete;
-    CpuDebugger( CpuDebugger && ) = delete;
+    void ComposeView( Cpu &cpu, u32 cycles, DebuggerMode& mode );
 
-    void ComposeView( Cpu &cpu, u32 cycles );
+private:
+    bool instructionJump;
 };

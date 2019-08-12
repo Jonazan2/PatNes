@@ -1,12 +1,17 @@
 #include "CpuDebugger.h"
 
+#include "Debugger.h"
 #include "../Cpu.h"
 #include "Imgui/imgui.h"
 
-void CpuDebugger::ComposeView( Cpu &cpu, u32 cycles )
+CpuDebugger::CpuDebugger()
+    : instructionJump( false )
+{
+}
+
+void CpuDebugger::ComposeView( Cpu &cpu, u32 cycles, DebuggerMode& mode )
 {
     ImGui::SetNextWindowPos( ImVec2( 0, 0 ) );
-    ImGui::SetNextWindowSize( ImVec2( 400, 250.f ) );
     ImGui::Begin( "Cpu" );
     {
         ImGui::Columns( 2 );
@@ -53,7 +58,26 @@ void CpuDebugger::ComposeView( Cpu &cpu, u32 cycles )
             ImGui::Text( yRegister );
         }
         ImGui::NextColumn();
+        ImGui::Columns(1);
+
         ImGui::Separator();
+        {
+            if (ImGui::Button("Next instruction")) {
+                mode = DebuggerMode::BREAKPOINT;
+                instructionJump = false;
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button("Run")) {
+                mode = DebuggerMode::RUNNING;
+                instructionJump = false;
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button("Run until vsync")) {
+                mode = DebuggerMode::V_SYNC;
+            }
+        }
     }
     ImGui::End();
 }
