@@ -1,5 +1,7 @@
 #pragma once
 
+/* Basic types */
+
 using byte = unsigned char;
 using word = unsigned short;
 
@@ -19,6 +21,8 @@ union Register
     word value;
 };
 
+
+/* Operators */
 
 namespace 
 {

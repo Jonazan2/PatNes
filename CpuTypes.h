@@ -22,7 +22,7 @@ enum class CpuAddressMode : byte
     IndexedY,
 };
 
-static const std::unordered_map<CpuAddressMode, const char *> AddressModeString =
+static const std::unordered_map<CpuAddressMode, const char *> ADDRESS_MODE_STRING =
 {
     { CpuAddressMode::Implicit,     "Implicit" },
     { CpuAddressMode::Accumulator,  "Accumulator" },
@@ -39,7 +39,7 @@ static const std::unordered_map<CpuAddressMode, const char *> AddressModeString 
     { CpuAddressMode::IndexedY,     "Indexed Y" },
 };
 
-static const std::unordered_map<CpuAddressMode, byte> AddressModeOpcodeLength =
+static const std::unordered_map<CpuAddressMode, byte> ADDRESS_MODE_OPCODE_LENGTH =
 {
     { CpuAddressMode::Implicit,     1 },
     { CpuAddressMode::Accumulator,  1 },
@@ -62,7 +62,7 @@ struct OpcodeInfo
     CpuAddressMode  addressMode;
 };
 
-static const std::unordered_map<byte, OpcodeInfo> NESOpcodesInfo = 
+static const std::unordered_map<byte, OpcodeInfo> NES_OPCODE_INFO = 
 {
     { 0x00, { "BRK", CpuAddressMode::Implicit } },
     { 0x01, { "ORA", CpuAddressMode::IndexedX } },

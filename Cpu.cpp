@@ -8,6 +8,19 @@
 
 #include "Memory.h"
 
+
+const std::unordered_map<Cpu::Flags, const char *> Cpu::FLAGS_STRING  =
+{
+    { Cpu::Flags::Negative,         "Negative"          },
+    { Cpu::Flags::Overflow,         "Overflow"          },
+    { Cpu::Flags::Break,            "Break"             },
+    { Cpu::Flags::DecimalMode,      "Decimal Mode"      },
+    { Cpu::Flags::InterruptDisable, "Interrupt Disable" },
+    { Cpu::Flags::Zero,             "Zero"              },
+    { Cpu::Flags::Carry,            "Carry"             },
+};
+
+
 Cpu::Cpu( Memory *memory )
     : memory( memory )
 {
@@ -415,6 +428,40 @@ word Cpu::GetAbsoluteStackAddress() const
 {
     return 0x0100 + stackPointer;
 }
+
+
+/* ------------------- GETTERS -------------------*/
+
+Register Cpu::GetPC() const
+{
+    return PC;
+}
+
+byte Cpu::GetStackPointer() const
+{
+    return stackPointer;
+}
+
+byte Cpu::GetStateRegister() const
+{
+    return pRegister;
+}
+
+byte Cpu::GetAccumulator() const
+{
+    return accumulator;
+}
+
+byte Cpu::GetRegisterX() const
+{
+    return xRegisterIndex;
+}
+
+byte Cpu::GetRegisterY() const
+{
+    return yRegisterIndex;
+}
+
 
 
 /* ------------------- MAPPABLE INSTRUCTIONS -------------------*/

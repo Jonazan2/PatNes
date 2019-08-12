@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "Types.h"
 
 
@@ -19,8 +21,9 @@ public:
         InterruptDisable    = 0b0000'0100,
         Zero                = 0b0000'0010,
         Carry               = 0b0000'0001,
-
     };
+
+    static const std::unordered_map<Cpu::Flags, const char *> FLAGS_STRING;
 
 
     Cpu( Memory *memory );
@@ -33,6 +36,16 @@ public:
     void RaiseFlag( Flags flag );
     void ToggleFlag( Flags flag );
     void ClearFlag( Flags flag );
+
+    Register    GetPC() const;
+    byte        GetStackPointer() const;
+    byte        GetStateRegister() const;
+    byte        GetAccumulator() const;
+    byte        GetRegisterX() const;
+    byte        GetRegisterY() const;
+
+    /* Stack operations */
+    word GetAbsoluteStackAddress() const;
 
 private:
 
@@ -50,8 +63,6 @@ private:
     /* Systems */
     Memory      *memory;
 
-    /* Stack operations */
-    word GetAbsoluteStackAddress() const;
 
     /* Opcode handling */
     byte GetNextOpcode();

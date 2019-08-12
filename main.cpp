@@ -14,8 +14,6 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    Debugger debugger;
-    debugger.StartDebugger();
 
     Cartridge cartridge( argv[1] );
     if ( cartridge.IsLoaded() )
@@ -25,10 +23,13 @@ int main(int argc, char** argv)
         Memory memory( &cartridge );
         Cpu cpu( &memory );
         
+        Debugger debugger( &cpu );
+        debugger.StartDebugger();
+
         short currentCycles = 0;
         while (currentCycles < 1000)
         {
-            //currentCycles += cpu.Update();
+            currentCycles += cpu.Update();
             debugger.Update(0.f, currentCycles);
         }
 
