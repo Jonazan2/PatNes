@@ -132,16 +132,16 @@ short Cpu::ExecuteMappableInstruction( byte opcode )
 short Cpu::ExecuteInstructionCC00( byte opcode )
 {
     /* We only need the 'aaa' part of the instruction to map it since we already know that cc == 01 */
-    static const std::unordered_map< byte, MappableInstructionFunctionPtr > INSTRUCTION_MAP =
+    static constexpr std::array< MappableInstructionFunctionPtr, 8 > INSTRUCTION_MAP =
     {
-        { 0x01, &Cpu::BIT },
-        { 0x02, &Cpu::JMP },
-        { 0x03, &Cpu::JMPA },
+        &Cpu::BIT,
+        &Cpu::JMP,
+        &Cpu::JMPA,
 
-        { 0x04, &Cpu::STY },
-        { 0x05, &Cpu::LDY },
-        { 0x06, &Cpu::CPY },
-        { 0x07, &Cpu::CPX }
+        &Cpu::STY,
+        &Cpu::LDY,
+        &Cpu::CPY,
+        &Cpu::CPX
     };
 
 
@@ -158,24 +158,24 @@ short Cpu::ExecuteInstructionCC00( byte opcode )
 
 
     const byte instruction = ( ( opcode & 0b1110'0000 ) >> 5 );
-    const MappableInstructionFunctionPtr ptr = INSTRUCTION_MAP.at( instruction );
+    const MappableInstructionFunctionPtr ptr = INSTRUCTION_MAP[ instruction ];
     return ( this->*ptr )( address );
 }
 
 short Cpu::ExecuteInstructionCC01( byte opcode )
 {
     /* We only need the 'aaa' part of the instruction to map it since we already know that cc == 01 */
-    static const std::unordered_map< byte, MappableInstructionFunctionPtr > INSTRUCTION_MAP =
+    static constexpr std::array< MappableInstructionFunctionPtr, 8 > INSTRUCTION_MAP =
     {
-        { 0x00, &Cpu::ORA },
-        { 0x01, &Cpu::AND },
-        { 0x02, &Cpu::EOR },
-        { 0x03, &Cpu::ADC },
+        &Cpu::ORA,
+        &Cpu::AND,
+        &Cpu::EOR,
+        &Cpu::ADC,
 
-        { 0x04, &Cpu::STA },
-        { 0x05, &Cpu::LDA },
-        { 0x06, &Cpu::CMP },
-        { 0x07, &Cpu::SBC }
+        &Cpu::STA,
+        &Cpu::LDA,
+        &Cpu::CMP,
+        &Cpu::SBC
     };
 
 
@@ -194,31 +194,31 @@ short Cpu::ExecuteInstructionCC01( byte opcode )
     }
 
     const byte instruction = ( ( opcode & 0b1110'0000 ) >> 5 );
-    const MappableInstructionFunctionPtr ptr = INSTRUCTION_MAP.at( instruction );
+    const MappableInstructionFunctionPtr ptr = INSTRUCTION_MAP[ instruction ];
     return ( this->*ptr )( address );
 }
 
 short Cpu::ExecuteInstructionCC10( byte opcode )
 {
-    static const std::unordered_map< byte, MappableInstructionFunctionPtr > INSTRUCTION_MAP =
+    static constexpr std::array< MappableInstructionFunctionPtr, 8 > INSTRUCTION_MAP =
     {
-        { 0x00, &Cpu::ASL },
-        { 0x01, &Cpu::ROL },
-        { 0x02, &Cpu::LSR },
-        { 0x03, &Cpu::ROR },
+        &Cpu::ASL,
+        &Cpu::ROL,
+        &Cpu::LSR,
+        &Cpu::ROR,
 
-        { 0x04, &Cpu::STX },
-        { 0x05, &Cpu::LDX },
-        { 0x06, &Cpu::DEC },
-        { 0x07, &Cpu::INC }
+        &Cpu::STX,
+        &Cpu::LDX,
+        &Cpu::DEC,
+        &Cpu::INC
     };
 
-    static const std::unordered_map< byte, InstructionFunctionPtr > ACCUMULATOR_MODE_INSTRUCTION_MAP =
+    static constexpr std::array< InstructionFunctionPtr, 4 > ACCUMULATOR_MODE_INSTRUCTION_MAP =
     {
-        { 0x00, &Cpu::ASLA },
-        { 0x01, &Cpu::ROLA },
-        { 0x02, &Cpu::LSRA },
-        { 0x03, &Cpu::RORA },
+        &Cpu::ASLA,
+        &Cpu::ROLA,
+        &Cpu::LSRA,
+        &Cpu::RORA,
     };
 
 
@@ -227,7 +227,7 @@ short Cpu::ExecuteInstructionCC10( byte opcode )
     if ( addressingMode == 0b0000'0010 )
     {
         /* we handle the accumulator mode with the map directly by having separated instructions */
-        const InstructionFunctionPtr ptr = ACCUMULATOR_MODE_INSTRUCTION_MAP.at( instruction );
+        const InstructionFunctionPtr ptr = ACCUMULATOR_MODE_INSTRUCTION_MAP[ instruction ];
         return ( this->*ptr )();
     }
     else
@@ -265,7 +265,7 @@ short Cpu::ExecuteInstructionCC10( byte opcode )
             }
         }
 
-        const MappableInstructionFunctionPtr ptr = INSTRUCTION_MAP.at( instruction );
+        const MappableInstructionFunctionPtr ptr = INSTRUCTION_MAP[ instruction ];
         return ( this->*ptr )( address );
     }
 }
