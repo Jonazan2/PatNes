@@ -41,7 +41,7 @@ void Debugger::StartDebugger()
         return;
     }
 
-    glfwSetFramebufferSizeCallback( window, []( GLFWwindow *window, int width, int height )
+    glfwSetFramebufferSizeCallback( window, []( GLFWwindow *window, i32 width, i32 height )
         {
             glViewport( 0, 0, width, height );
         }
@@ -60,87 +60,30 @@ void Debugger::CloseDebugger()
     glfwTerminate();
 }
 
-void Debugger::Update( float deltaMilliseconds, unsigned int cycles )
+void Debugger::Update( float deltaMilliseconds, u32 cycles )
 {
     if ( cycles % 10000 )
     {
-        ComposeView(deltaMilliseconds, cycles);
+        ComposeView( cycles );
         Render();
     }
 }
 
-void Debugger::ComposeView( float deltaMilliseconds, unsigned int cycles )
+void Debugger::ComposeView( u32 cycles )
 {
     glfwPollEvents();
     ImGuiGLFW::NewFrame();
 
-    int width, height;
-    glfwGetFramebufferSize( window, &width, &height );
-
-    ImGui::SetNextWindowPos( ImVec2( 0, 0 ) );
-    ImGui::SetNextWindowSize( ImVec2( static_cast< float >( width ), static_cast< float >( height ) ) );
-    ImGui::Begin( "PatNes" );
-    {
-        ImGui::Columns(2, nullptr, true);
-        ImGui::SetColumnWidth(0, 200.f);
-        ImGui::SetColumnWidth(1, 200.f);
-        {
-            ImGui::Text( "Flags:" );
-
-            for (const auto &[ flag, name ] : Cpu::FLAGS_STRING )
-            {
-                AddFlagCheckbox( flag, name );
-            }
-        }
-        ImGui::NextColumn();
-        {
-            ImGui::Text( "Registers:" );
-            char pcValue[ 32 ];
-            sprintf( pcValue, "PC: 0x%04X", cpu->GetPC().value );
-            ImGui::Text( pcValue );
-
-            char accumulator[ 32 ];
-            sprintf( accumulator, "Accumulator: 0x%02X", cpu->GetAccumulator() );
-            ImGui::Text( accumulator );
-
-            char stackPointer[ 32 ];
-            sprintf( stackPointer, "Stack Pointer: 0x%04X", cpu->GetAbsoluteStackAddress() );
-            ImGui::Text( stackPointer );
-        
-            char pRegisterValue[ 32 ];
-            sprintf( pRegisterValue, "Status Register: 0x%02X", cpu->GetStateRegister() );
-            ImGui::Text( pRegisterValue );
-
-            char xRegister[ 32 ];
-            sprintf( xRegister, "X: 0x%02X", cpu->GetRegisterX() );
-            ImGui::Text( xRegister );
-
-            char yRegister[ 32 ];
-            sprintf( yRegister, "Y: 0x%04X", cpu->GetRegisterY() );
-            ImGui::Text( yRegister );
-        }
-        ImGui::NextColumn();
-        ImGui::Separator();
-    }
-    ImGui::End();
-}
-
-void Debugger::AddFlagCheckbox( Cpu::Flags flag, const char *name )
-{
-    bool breakFlag = cpu->IsFlagSet( flag );
-    if ( ImGui::Checkbox( name, &breakFlag ) )
-    {
-        cpu->ToggleFlag( flag );
-    }
+    cpuDebugger.ComposeView( *cpu, cycles );
 }
 
 void Debugger::Render()
 {
-    int width, height;
+    i32 width, height;
     glfwGetFramebufferSize( window, &width, &height );
     glViewport( 0, 0, width, height );
     glClear( GL_COLOR_BUFFER_BIT );
     ImGui::Render();
     ImGuiGLFW::RenderDrawLists( ImGui::GetDrawData() );
-    glfwSwapBuffers(window);
+    glfwSwapBuffers( window );
 }

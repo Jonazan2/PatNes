@@ -26,7 +26,7 @@ int main(int argc, char** argv)
         Debugger debugger( &cpu );
         debugger.StartDebugger();
 
-        short currentCycles = 0;
+        u32 currentCycles = 0;
         while (currentCycles < 1000)
         {
             currentCycles += cpu.Update();

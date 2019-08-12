@@ -9,7 +9,7 @@
 #include "Memory.h"
 
 
-const std::unordered_map<Cpu::Flags, const char *> Cpu::FLAGS_STRING  =
+const std::unordered_map< Cpu::Flags, const char * > Cpu::FLAGS_STRING  =
 {
     { Cpu::Flags::Negative,         "Negative"          },
     { Cpu::Flags::Overflow,         "Overflow"          },
