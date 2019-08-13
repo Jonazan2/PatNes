@@ -2,6 +2,8 @@
 
 #include "Debugger.h"
 #include "../Cpu.h"
+#include "../Memory.h"
+#include "../CpuTypes.h"
 #include "Imgui/imgui.h"
 
 CpuDebugger::CpuDebugger()
@@ -9,7 +11,7 @@ CpuDebugger::CpuDebugger()
 {
 }
 
-void CpuDebugger::ComposeView( Cpu &cpu, u32 cycles, DebuggerMode& mode )
+void CpuDebugger::ComposeView( Cpu &cpu, Memory &memory, u32 cycles, DebuggerMode& mode )
 {
     ImGui::SetNextWindowPos( ImVec2( 0, 0 ) );
     ImGui::Begin( "Cpu" );
@@ -77,6 +79,60 @@ void CpuDebugger::ComposeView( Cpu &cpu, u32 cycles, DebuggerMode& mode )
             if (ImGui::Button("Run until vsync")) {
                 mode = DebuggerMode::V_SYNC;
             }
+        }
+        {
+            int perItemWidth = 25;
+            ImGui::Text("%-*s%-*s%-*s", perItemWidth, "Address", perItemWidth, "Opcode", perItemWidth, "Mnemonic", perItemWidth, "Address Mode");
+            ImGui::Separator();
+
+            ImGui::BeginGroup();
+            ImGui::BeginChild("##scrollingregion");
+            ImGuiListClipper clipper(0xFFFF, ImGui::GetTextLineHeightWithSpacing());
+
+            if ( ( mode == DebuggerMode::IDLE || mode == DebuggerMode::BREAKPOINT ) && !instructionJump )
+            {
+                ImGui::SetScrollFromPosY( ImGui::GetCursorStartPos().y + ( cpu.GetPC().value * ImGui::GetTextLineHeightWithSpacing() ), 0.5f );
+                instructionJump = true;
+                clipper.DisplayEnd += 16;
+            }
+            else
+            {
+                clipper.DisplayEnd = clipper.DisplayStart + 30;
+            }
+
+            for ( u32 i = clipper.DisplayStart; i <= clipper.DisplayEnd; i++ ) 
+            {
+                char address[32];
+                sprintf( address, "0x%02X", i);
+
+                const byte opcode = memory.Read( i );
+                std::unordered_map< byte, OpcodeInfo >::const_iterator it = NES_OPCODE_INFO.find( opcode );
+                if ( it == NES_OPCODE_INFO.end() )
+                {
+                    /* Invalid opcode */
+                    ImGui::Text( "%-*s%-*s%-*s", perItemWidth, address, perItemWidth, "INVALID", perItemWidth, "-" );
+                }
+                else
+                {
+                    OpcodeInfo opcodeInfo = NES_OPCODE_INFO.at( opcode );
+                                        
+                    char mnemonic[ 32 ];
+                    sprintf( mnemonic, "%s", opcodeInfo.mnemonic );
+
+                    const byte addressModeIndex = static_cast< byte >( opcodeInfo.addressMode );
+                    const byte opcodeLength = ADDRESS_MODE_OPCODE_LENGTH [ addressModeIndex ];
+                    if ( opcodeLength > 1 )
+                    {
+                        i += opcodeLength;
+                    }
+                    const char *addressMode = ADDRESS_MODE_STRING[ addressModeIndex ]; 
+                    ImGui::Text( "%-*s%-*s%-*s", perItemWidth, address, perItemWidth, mnemonic, perItemWidth, addressMode );
+                }
+            }
+
+            clipper.End();
+            ImGui::EndChild();
+            ImGui::EndGroup();
         }
     }
     ImGui::End();

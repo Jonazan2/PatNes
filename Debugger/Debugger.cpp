@@ -14,8 +14,9 @@
 #include "../CpuTypes.h"
 
 
-Debugger::Debugger( Cpu *cpu )
+Debugger::Debugger( Cpu *cpu, Memory *memory )
     : cpu( cpu )
+    , memory ( memory )
     , mode( DebuggerMode::BREAKPOINT )
     , window( nullptr )
 {
@@ -79,8 +80,9 @@ void Debugger::Update( float deltaMilliseconds, u32 cycles )
 
         std::chrono::time_point<std::chrono::high_resolution_clock> current, previous;
         previous = std::chrono::high_resolution_clock::now();
-
-        while (mode != DebuggerMode::RUNNING )
+        
+        mode = DebuggerMode::IDLE;
+        while ( mode == DebuggerMode::IDLE )
         {
             current = std::chrono::high_resolution_clock::now();
             auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>> (current - previous);
@@ -102,7 +104,7 @@ void Debugger::ComposeView( u32 cycles )
     glfwPollEvents();
     ImGuiGLFW::NewFrame();
 
-    cpuDebugger.ComposeView( *cpu, cycles, mode );
+    cpuDebugger.ComposeView( *cpu, *memory, cycles, mode );
 }
 
 void Debugger::Render()

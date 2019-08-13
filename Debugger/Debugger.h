@@ -17,7 +17,7 @@ struct GLFWwindow;
 class Debugger
 {
 public:
-    Debugger( Cpu *cpu );
+    Debugger( Cpu *cpu, Memory *memory );
     Debugger(Debugger &) = delete;
 
     void StartDebugger();
@@ -28,11 +28,11 @@ private:
     
     /* Systems */
     Cpu             *cpu;
-    
+    Memory          *memory;
+
     /* Specific Debuggers */
     CpuDebugger     cpuDebugger;
 
-    
     GLFWwindow      *window;
     DebuggerMode    mode;
 

@@ -5,6 +5,7 @@
 #include "Cpu.h"
 #include "Debugger/Debugger.h"
 
+static constexpr u32 AVERAGE_CYCLES_PER_FRAME = 29780;
 
 int main(int argc, char** argv)
 {
@@ -23,11 +24,12 @@ int main(int argc, char** argv)
         Memory memory( &cartridge );
         Cpu cpu( &memory );
         
-        Debugger debugger( &cpu );
+        Debugger debugger( &cpu, &memory );
         debugger.StartDebugger();
 
+        /* Run the first frame for now */
         u32 currentCycles = 0;
-        while (currentCycles < 1000)
+        while ( currentCycles < AVERAGE_CYCLES_PER_FRAME )
         {
             currentCycles += cpu.Update();
             debugger.Update(0.f, currentCycles);
