@@ -101,7 +101,7 @@ short Cpu::ExecuteBranchInstruction( byte opcode )
     const byte secondOperand = (opcode & 0b0010'0000) >> 5;
 
     const bool shouldBranch = IsFlagSet( OPERAND_TO_FLAG[ firstOperand ] ) == static_cast< bool >( secondOperand );
-    const byte relativeDisplacement = memory->Read( PC.value );
+    const char relativeDisplacement = static_cast< char >( memory->Read( PC.value ) );
     ++PC.value;
 
     if ( shouldBranch )
