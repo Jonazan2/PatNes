@@ -62,6 +62,7 @@ void CpuDebugger::ComposeView( Cpu &cpu, Memory &memory, u32 cycles, DebuggerMod
         ImGui::NextColumn();
         ImGui::Columns(1);
 
+        bool goToPcPosition = false;
         ImGui::Separator();
         {
             if (ImGui::Button("Next instruction")) {
@@ -79,6 +80,12 @@ void CpuDebugger::ComposeView( Cpu &cpu, Memory &memory, u32 cycles, DebuggerMod
             if (ImGui::Button("Run until vsync")) {
                 mode = DebuggerMode::V_SYNC;
             }
+
+            ImGui::SameLine();
+            if (ImGui::Button("Go to PC instruction")) {
+                mode = DebuggerMode::IDLE;
+                goToPcPosition = true;
+            }
         }
         {
             int perItemWidth = 25;
@@ -94,23 +101,31 @@ void CpuDebugger::ComposeView( Cpu &cpu, Memory &memory, u32 cycles, DebuggerMod
                 ImGui::SetScrollFromPosY( ImGui::GetCursorStartPos().y + ( cpu.GetPC().value * ImGui::GetTextLineHeightWithSpacing() ), 0.5f );
                 instructionJump = true;
                 clipper.DisplayEnd += 16;
+
+                if ( goToPcPosition )
+                {
+                    clipper.DisplayStart = cpu.GetPC().value;
+                }
             }
             else
             {
                 clipper.DisplayEnd = clipper.DisplayStart + 30;
             }
 
-            for ( u32 i = clipper.DisplayStart; i <= clipper.DisplayEnd; i++ ) 
+            u32 opcodeLengthOffset = 1;
+            for ( u32 i = clipper.DisplayStart; i <= clipper.DisplayEnd; i += opcodeLengthOffset ) 
             {
                 char address[32];
                 sprintf( address, "0x%02X", i);
+                
+                char text[128];
 
                 const byte opcode = memory.Read( i );
                 std::unordered_map< byte, OpcodeInfo >::const_iterator it = NES_OPCODE_INFO.find( opcode );
                 if ( it == NES_OPCODE_INFO.end() )
                 {
                     /* Invalid opcode */
-                    ImGui::Text( "%-*s%-*s%-*s", perItemWidth, address, perItemWidth, "INVALID", perItemWidth, "-" );
+                    sprintf(text, "%-*s%-*s%-*s", perItemWidth, address, perItemWidth, "INVALID", perItemWidth, "-" );
                 }
                 else
                 {
@@ -120,13 +135,34 @@ void CpuDebugger::ComposeView( Cpu &cpu, Memory &memory, u32 cycles, DebuggerMod
                     sprintf( mnemonic, "%s", opcodeInfo.mnemonic );
 
                     const byte addressModeIndex = static_cast< byte >( opcodeInfo.addressMode );
-                    const byte opcodeLength = ADDRESS_MODE_OPCODE_LENGTH [ addressModeIndex ];
-                    if ( opcodeLength > 1 )
-                    {
-                        i += opcodeLength;
-                    }
                     const char *addressMode = ADDRESS_MODE_STRING[ addressModeIndex ]; 
-                    ImGui::Text( "%-*s%-*s%-*s", perItemWidth, address, perItemWidth, mnemonic, perItemWidth, addressMode );
+                    sprintf( text, "%-*s%-*s%-*s", perItemWidth, address, perItemWidth, mnemonic, perItemWidth, addressMode );
+                    
+                    const byte opcodeLength = ADDRESS_MODE_OPCODE_LENGTH [ addressModeIndex ];
+                    opcodeLengthOffset = opcodeLength;
+                }
+
+                if ( ( mode == DebuggerMode::IDLE || mode == DebuggerMode::BREAKPOINT ) && i == cpu.GetPC().value )
+                {
+                    ImGui::PushStyleColor( ImGuiCol_Text, ImVec4( 0, 1, 0, 1 ) );
+                }
+
+                bool alreadySelected = HasAddressABreakpoint( i );
+                if ( ImGui::Selectable( text, alreadySelected, ImGuiSelectableFlags_AllowDoubleClick ) )
+                {
+                    if ( alreadySelected )
+                    {
+                        breakpoints.erase(i);
+                    }
+                    else 
+                    {
+                        breakpoints.insert(i);
+                    }
+                }
+
+                if ( ( mode == DebuggerMode::IDLE || mode == DebuggerMode::BREAKPOINT ) && i == cpu.GetPC().value ) 
+                {
+                    ImGui::PopStyleColor();
                 }
             }
 
@@ -136,4 +172,25 @@ void CpuDebugger::ComposeView( Cpu &cpu, Memory &memory, u32 cycles, DebuggerMod
         }
     }
     ImGui::End();
+}
+
+bool CpuDebugger::HasAddressABreakpoint( word address ) const
+{
+    if (breakpoints.empty())
+    {
+        return false;
+    }
+
+    for ( word breakpoint : breakpoints ) 
+    {
+        if ( breakpoint == address)
+        {
+            return true;
+        }
+        else if (breakpoint > address)
+        {
+            return false;
+        }
+    }
+    return false;
 }

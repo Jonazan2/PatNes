@@ -17,7 +17,7 @@
 Debugger::Debugger( Cpu *cpu, Memory *memory )
     : cpu( cpu )
     , memory ( memory )
-    , mode( DebuggerMode::BREAKPOINT )
+    , mode( DebuggerMode::IDLE )
     , window( nullptr )
 {
 }
@@ -65,27 +65,18 @@ void Debugger::CloseDebugger()
 
 void Debugger::Update( float deltaMilliseconds, u32 cycles )
 {
-    if ( mode == DebuggerMode::RUNNING )
-    {
-        /* In normal mode just render the debugger at the same rate as the emulator: random number for now */
-        if ( cycles % 10000 )
-        {
-            ComposeView( cycles );
-            Render();
-        }
-    }
-    else
+    if ( mode == DebuggerMode::BREAKPOINT  || mode == DebuggerMode::IDLE || cpuDebugger.HasAddressABreakpoint( cpu->GetPC().value ) )
     {
         /* if the emulator has reached a breakpoint we render the debugger at 60fps */
 
         std::chrono::time_point<std::chrono::high_resolution_clock> current, previous;
         previous = std::chrono::high_resolution_clock::now();
-        
+
         mode = DebuggerMode::IDLE;
         while ( mode == DebuggerMode::IDLE )
         {
             current = std::chrono::high_resolution_clock::now();
-            auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>> (current - previous);
+            const auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>> (current - previous);
             previous = current;
 
             ComposeView( cycles );
@@ -95,6 +86,15 @@ void Debugger::Update( float deltaMilliseconds, u32 cycles )
             {
                 std::this_thread::sleep_for( std::chrono::duration< float, std::milli > ( 16.6F - elapsed.count() ) );
             }
+        }
+    }
+    else
+    {
+        /* In normal mode just render the debugger at the same rate as the emulator: random number for now */
+        if ( cycles % 10000 )
+        {
+            ComposeView( cycles );
+            Render();
         }
     }
 }
