@@ -3,6 +3,7 @@
 #include "Cartridge.h"
 #include "Memory.h"
 #include "Cpu.h"
+#include "Video.h"
 #include "Debugger/Debugger.h"
 
 static constexpr u32 AVERAGE_CYCLES_PER_FRAME = 29780;
@@ -23,8 +24,9 @@ int main(int argc, char** argv)
 
         Memory memory( &cartridge );
         Cpu cpu( &memory );
-        
-        Debugger debugger( &cpu, &memory );
+        Video video( &cartridge );
+
+        Debugger debugger( &cpu, &memory, &video );
         debugger.StartDebugger();
 
         /* Run the first frame for now */

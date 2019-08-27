@@ -21,6 +21,19 @@ union Register
     word value;
 };
 
+struct RGB
+{
+    byte red;
+    byte green;
+    byte blue;
+
+    bool isEqual(RGB other) const
+    {
+        return red == other.red && green == other.green && blue == other.blue;
+    }
+};
+
+constexpr RGB PINK = { 0xFF, 0x00, 0x80 };
 
 /* Operators */
 

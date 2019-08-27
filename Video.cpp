@@ -25,3 +25,8 @@ void Video::MapCartridgeCHRToPPU()
     const u32 dataSize = header.chrRomSizeKB * 1_KB;
     memcpy( memory, &cartridgeRom[ offset ], dataSize );
 }
+
+const byte * const Video::GetPPUMemory() const
+{
+    return memory;
+}

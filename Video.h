@@ -39,6 +39,8 @@ class Video
 public:
     Video( Cartridge *memory );
 
+    const byte * const GetPPUMemory() const;
+
 private:
 
     /* Associated Systems */

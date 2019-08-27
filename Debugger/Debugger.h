@@ -13,12 +13,15 @@ enum class DebuggerMode : byte
 };
 
 struct GLFWwindow;
+class Video;
 
 class Debugger
 {
 public:
-    Debugger( Cpu *cpu, Memory *memory );
+    Debugger( Cpu *cpu, Memory *memory, Video *video );
     Debugger(Debugger &) = delete;
+    ~Debugger();
+
 
     void StartDebugger();
     void Update( float deltaMilliseconds, u32 cycles );
@@ -26,16 +29,28 @@ public:
 
 private:
     
+    using ImTextureID = void *;
+    
     /* Systems */
     Cpu             *cpu;
     Memory          *memory;
+    Video           *video;
 
     /* Specific Debuggers */
     CpuDebugger     cpuDebugger;
+
+    /* Textures */
+    ImTextureID     leftPatternTableTextureID;
+    RGB             *leftPatternTableBuffer;
+
+    ImTextureID     rightPatternTableTextureID;
+    RGB             *rightPatternTableBuffer;
 
     GLFWwindow      *window;
     DebuggerMode    mode;
 
     void ComposeView( u32 cycles );
     void Render();
+
+    void UpdatePatternTable( word address, RGB *buffer );
 };
