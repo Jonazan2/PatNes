@@ -23,7 +23,9 @@
     |                     |                             |
     |  0x3000 - 0x3EFF    |  Mirrors of 0x2000 0x2EFF   |
     |                     |                             |
-    |  0x3F00 - 0x3F1F    |  Palette RAM indexes        |
+    |  0x3F00 - 0x3F0F    |  BG Palette RAM indexes     |
+    |                     |                             |
+    |  0x3F10 - 0x3F1F    |  Sprite Palette RAM indexes |
     |                     |                             |
     |  0x3F20 - 0x3FFF    |  Mirrors of 0x3F00 0x3F1F   |
     |                     |                             |
@@ -48,7 +50,7 @@ private:
 
     /* PPU memory layout */
     byte            *memory;
-    
+
 
     void MapCartridgeCHRToPPU();
 };

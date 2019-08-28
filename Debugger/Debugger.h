@@ -3,6 +3,8 @@
 #include "../Types.h"
 #include "../Cpu.h"
 #include "CpuDebugger.h"
+#include "VideoDebugger.h"
+
 
 enum class DebuggerMode : byte 
 {
@@ -19,17 +21,13 @@ class Debugger
 {
 public:
     Debugger( Cpu *cpu, Memory *memory, Video *video );
-    Debugger(Debugger &) = delete;
-    ~Debugger();
-
+    Debugger( Debugger & ) = delete;
 
     void StartDebugger();
     void Update( float deltaMilliseconds, u32 cycles );
     void CloseDebugger();
 
 private:
-    
-    using ImTextureID = void *;
     
     /* Systems */
     Cpu             *cpu;
@@ -38,19 +36,11 @@ private:
 
     /* Specific Debuggers */
     CpuDebugger     cpuDebugger;
-
-    /* Textures */
-    ImTextureID     leftPatternTableTextureID;
-    RGB             *leftPatternTableBuffer;
-
-    ImTextureID     rightPatternTableTextureID;
-    RGB             *rightPatternTableBuffer;
+    VideoDebugger   videoDebugger;
 
     GLFWwindow      *window;
     DebuggerMode    mode;
 
     void ComposeView( u32 cycles );
     void Render();
-
-    void UpdatePatternTable( word address, RGB *buffer );
 };

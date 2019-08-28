@@ -30,6 +30,8 @@ public:
     byte Read( word address ) const;
     void Write( word address, byte data );
 
+    const byte *const GetMemoryMap() const;
+
 private:
 
     byte *map;

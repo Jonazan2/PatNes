@@ -8,8 +8,8 @@
 
 Memory::Memory( Cartridge *cartridge )
 {
-    map = new byte[ 0x10000 ];
-    memset( map, 0, 0x10000 );
+    map = new byte[ 64_KB ];
+    memset( map, 0x00, 64_KB );
 
     MapCartridge( cartridge );
 }
@@ -27,6 +27,11 @@ byte Memory::Read( word address ) const
 void Memory::Write( word address, byte data )
 {
     map[ address ] = data;
+}
+
+const byte *const Memory::GetMemoryMap() const
+{
+    return map;
 }
 
 void Memory::MapCartridge( Cartridge *cartridge )
