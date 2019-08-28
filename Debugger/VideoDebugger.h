@@ -11,7 +11,7 @@ public:
     ~VideoDebugger();
 
     void CreateTextures();
-    void ComposeView( u32 cycles, Video &video );
+    void ComposeView( u32 cycles, const Video &video );
 
 private:
     using ImTextureID = void *;
@@ -26,7 +26,14 @@ private:
     ImTextureID     nesPaletteTextureID;
     RGB             *nesPaletteTextureBuffer;
 
+    ImTextureID     backgroundPalettesTextureID[4];
+    RGB             *backgroundPalettesTextureBuffer[4];
 
-    void UpdatePatternTable( Video &video, word address, RGB *buffer );
+    ImTextureID     spritePalettesTextureID[4];
+    RGB             *spritePalettesTextureBuffer[4];
+
+
+    void UpdatePatternTable( const Video &video, word address, RGB *buffer );
     void GenerateNesPaletteTexture();
+    void UpdateTexturesOfCurrentPalettes( const Video &video, word address, RGB **buffer );
 };
