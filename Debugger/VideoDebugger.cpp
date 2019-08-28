@@ -31,12 +31,12 @@ void VideoDebugger::CreateTextures()
 
     for ( int i = 0; i < 4; ++i )
     {
-        backgroundPalettesTextureBuffer[ i ] = new RGB [ 4 ];
-        ImGuiGLFW::Texture backgroundPaletteTexture = { 0, 4, 1, backgroundPalettesTextureBuffer[ i ] };
+        backgroundPalettesTextureBuffer[ i ] = new RGB [ 3 ];
+        ImGuiGLFW::Texture backgroundPaletteTexture = { 0, 3, 1, backgroundPalettesTextureBuffer[ i ] };
         backgroundPalettesTextureID[ i ] = ImGuiGLFW::CreateTexture( backgroundPaletteTexture );
 
-        spritePalettesTextureBuffer[ i ] = new RGB [ 4 ];
-        ImGuiGLFW::Texture spritePaletteTexture = { 0, 4, 1, spritePalettesTextureBuffer[ i ] };
+        spritePalettesTextureBuffer[ i ] = new RGB [ 3 ];
+        ImGuiGLFW::Texture spritePaletteTexture = { 0, 3, 1, spritePalettesTextureBuffer[ i ] };
         spritePalettesTextureID[ i ] = ImGuiGLFW::CreateTexture( spritePaletteTexture );
     }
 }
@@ -64,20 +64,20 @@ void VideoDebugger::ComposeView( u32 cycles, const Video &video )
         for ( byte paletteIndex = 0; paletteIndex < 4; ++paletteIndex )
         {
             char text[ 32 ];
-            sprintf( text, "Background Palette %i: \t", paletteIndex );
+            sprintf( text, "Background Palette %i:\t\t", paletteIndex );
             ImGui::Text( text );
             ImGui::SameLine();
-            ImGui::Image( backgroundPalettesTextureID[ paletteIndex ], ImVec2( 64, 12 ) );
+            ImGui::Image( backgroundPalettesTextureID[ paletteIndex ], ImVec2( 48, 12 ) );
         }
 
         UpdateTexturesOfCurrentPalettes( video, 0x3F11, spritePalettesTextureBuffer );
         for ( byte paletteIndex = 0; paletteIndex < 4; ++paletteIndex )
         {
             char text[ 32 ];
-            sprintf( text, "Sprite Palette %i: \t\t", paletteIndex );
+            sprintf( text, "Sprite Palette %i:\t\t\t", paletteIndex );
             ImGui::Text( text );
             ImGui::SameLine();
-            ImGui::Image( spritePalettesTextureID[ paletteIndex ], ImVec2( 64, 12 ) );
+            ImGui::Image( spritePalettesTextureID[ paletteIndex ], ImVec2( 48, 12 ) );
         }
         ImGui::End();
     }
@@ -139,11 +139,12 @@ void VideoDebugger::UpdateTexturesOfCurrentPalettes( const Video &video, word ad
     u32 paletteAddress = address;
     for ( byte index = 0; index < 4; ++index )
     {
-        for ( byte i = 0; i < 4; ++i )
+        for ( byte i = 0; i < 3; ++i )
         {
             const byte colorIndex = ppuMemory[ paletteAddress ];
             buffer[ index ][ i ] = NES_PALETTE_COLORS[ colorIndex ];
             paletteAddress++;
         }
+        paletteAddress++;
     }
 }

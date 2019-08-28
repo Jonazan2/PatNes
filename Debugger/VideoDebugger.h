@@ -26,11 +26,11 @@ private:
     ImTextureID     nesPaletteTextureID;
     RGB             *nesPaletteTextureBuffer;
 
-    ImTextureID     backgroundPalettesTextureID[4];
-    RGB             *backgroundPalettesTextureBuffer[4];
+    ImTextureID     backgroundPalettesTextureID[ 4 ];
+    RGB             *backgroundPalettesTextureBuffer[ 4 ];
 
-    ImTextureID     spritePalettesTextureID[4];
-    RGB             *spritePalettesTextureBuffer[4];
+    ImTextureID     spritePalettesTextureID[ 4 ];
+    RGB             *spritePalettesTextureBuffer[ 4 ];
 
 
     void UpdatePatternTable( const Video &video, word address, RGB *buffer );
