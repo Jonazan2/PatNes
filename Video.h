@@ -41,15 +41,35 @@ class Video
 public:
     Video( Cartridge *memory );
 
+    /* PPU memory management */
     const byte * const GetPPUMemory() const;
+    byte Read( word address ) const;
+    void Write( word address, byte data );
+
+    /* Frame buffer */
+    byte* GetFrameBuffer() const;
 
 private:
+
+    /* PPU Register addresses */
+    static constexpr word PPUCTRL_REGISTER      = 0x2000;
+    static constexpr word PPUMASK_REGISTER      = 0x2001;
+    static constexpr word PPUSTATUS_REGISTER    = 0x2002;
+    static constexpr word OAMA_REGISTER         = 0x2003;
+    static constexpr word OAMADATA_REGISTER     = 0x2004;
+    static constexpr word PPUSCROLL_REGISTER    = 0x2005;
+    static constexpr word PPUADDR_REGISTER      = 0x2006;
+    static constexpr word PPUDATA_ADDRESS       = 0x2007;
+
 
     /* Associated Systems */
     Cartridge       *cartridge;
 
     /* PPU memory layout */
     byte            *memory;
+
+    /* Frame buffer */
+    byte            *frameBuffer;
 
 
     void MapCartridgeCHRToPPU();

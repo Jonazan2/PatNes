@@ -11,7 +11,7 @@ Video::Video( Cartridge *cartridge )
 {
     memory = new byte[ 16_KB ];
     memset( memory, 0x00, 16_KB );
-    MapCartridgeCHRToPPU();
+    MapCartridgeCHRToPPU();    
 }
 
 void Video::MapCartridgeCHRToPPU()
@@ -24,9 +24,22 @@ void Video::MapCartridgeCHRToPPU()
     const u32 offset = (header.prgRomSizeKB * 1_KB) + 0x0010;
     const u32 dataSize = header.chrRomSizeKB * 1_KB;
     memcpy( memory, &cartridgeRom[ offset ], dataSize );
+
+
+    memory[ PPUSTATUS_REGISTER ] = 0b1010'0000;
 }
 
 const byte * const Video::GetPPUMemory() const
 {
     return memory;
+}
+
+byte Video::Read( word address ) const
+{
+    return memory[ address ];
+}
+
+void Video::Write( word address, byte data )
+{
+    memory[ address ] = data;
 }

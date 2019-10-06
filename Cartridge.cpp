@@ -50,6 +50,8 @@ bool Cartridge::TryLoad( const char* romFile )
     {
         return TryLoadHeader();
     }
+
+    return false;
 }
 
 bool Cartridge::TryLoadHeader()

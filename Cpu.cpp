@@ -125,6 +125,7 @@ short Cpu::ExecuteMappableInstruction( byte opcode )
         default:
         {
             assert( false && "How did I get here?. The show where instructions say...How did I get here?");
+            return 0;
         }
     }
 }

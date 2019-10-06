@@ -11,7 +11,6 @@
 #include <GLFW/glfw3native.h>
 #endif
 
-#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS 1
 #include <unordered_map>
 
 

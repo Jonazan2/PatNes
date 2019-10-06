@@ -16,30 +16,30 @@ int main(int argc, char** argv)
         return -1;
     }
 
-
     Cartridge cartridge( argv[1] );
-    if ( cartridge.IsLoaded() )
+    if ( !cartridge.IsLoaded() )
     {
-        cartridge.PrintDetails();
-
-        Memory memory( &cartridge );
-        Cpu cpu( &memory );
-        Video video( &cartridge );
-
-        Debugger debugger( &cpu, &memory, &video );
-        debugger.StartDebugger();
-
-        /* Run the first frame for now */
-        u32 currentCycles = 0;
-        while ( currentCycles < AVERAGE_CYCLES_PER_FRAME )
-        {
-            currentCycles += cpu.Update();
-            debugger.Update(0.f, currentCycles);
-        }
-
-        return 0;
+        std::cout << "The cartridge couldn't be loaded";
+        return -1;
     }
 
-    std::cout << "The cartridge couldn't be loaded";
-    return -1;
+
+    cartridge.PrintDetails();
+
+    Video video( &cartridge );
+    Memory memory( cartridge, video );
+    Cpu cpu( &memory );
+
+    Debugger debugger( &cpu, &memory, &video );
+    debugger.StartDebugger();
+
+    /* Run a few frames for now */
+    u32 currentCycles = 0;
+    while ( currentCycles < AVERAGE_CYCLES_PER_FRAME )
+    {
+        currentCycles += cpu.Update();
+        debugger.Update(0.f, currentCycles);
+    }
+
+    return 0;
 }

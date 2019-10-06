@@ -19,12 +19,13 @@
 
 
 class Cartridge;
+class Video;
 
 class Memory
 {
 public:
 
-    Memory( Cartridge *cartridge );
+    Memory( const Cartridge &cartridge, Video &video );
     ~Memory();
 
     byte Read( word address ) const;
@@ -34,7 +35,8 @@ public:
 
 private:
 
-    byte *map;
+    byte        *map;
+    Video       &video;
 
-    void MapCartridge( Cartridge *cartridge );
+    void MapCartridge( const Cartridge &cartridge );
 };

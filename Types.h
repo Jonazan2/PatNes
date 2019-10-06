@@ -35,14 +35,10 @@ struct RGB
 
 constexpr RGB PINK = { 0xFF, 0x00, 0x80 };
 
+
 /* Operators */
 
-namespace 
-{
-
-u64 operator"" _KB( u64 size )
+constexpr u64 operator"" _KB( u64 size )
 {
     return size * 1024;
-}
-
 }
