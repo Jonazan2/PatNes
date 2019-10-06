@@ -8,11 +8,19 @@
 
 enum class DebuggerMode : byte 
 {
-    IDLE,
+    IDLE = 0,
     BREAKPOINT,
     V_SYNC,
     RUNNING
 };
+
+enum class DebuggerUpdateResult : byte
+{
+    QUIT = 0,
+    CONTINUE,
+    RESET
+};
+
 
 struct GLFWwindow;
 class Video;
@@ -24,7 +32,7 @@ public:
     Debugger( Debugger & ) = delete;
 
     void StartDebugger();
-    void Update( float deltaMilliseconds, u32 cycles );
+    DebuggerUpdateResult Update( float deltaMilliseconds, u32 cycles );
     void CloseDebugger();
 
 private:
@@ -43,4 +51,5 @@ private:
 
     void ComposeView( u32 cycles );
     void Render();
+    bool ShouldCloseWindow() const;
 };

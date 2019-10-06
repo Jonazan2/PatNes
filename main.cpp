@@ -34,11 +34,13 @@ int main(int argc, char** argv)
     debugger.StartDebugger();
 
     /* Run a few frames for now */
+    bool quit = false;
     u32 currentCycles = 0;
-    while ( currentCycles < AVERAGE_CYCLES_PER_FRAME )
+    while ( currentCycles < AVERAGE_CYCLES_PER_FRAME && !quit )
     {
         currentCycles += cpu.Update();
-        debugger.Update(0.f, currentCycles);
+        DebuggerUpdateResult result = debugger.Update( 0.f, currentCycles );
+        quit = ( result == DebuggerUpdateResult::QUIT );
     }
 
     return 0;

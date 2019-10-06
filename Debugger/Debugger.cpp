@@ -65,7 +65,7 @@ void Debugger::CloseDebugger()
     glfwTerminate();
 }
 
-void Debugger::Update( float deltaMilliseconds, u32 cycles )
+DebuggerUpdateResult Debugger::Update( float deltaMilliseconds, u32 cycles )
 {
     if ( mode == DebuggerMode::BREAKPOINT  || mode == DebuggerMode::IDLE || cpuDebugger.HasAddressABreakpoint( cpu->GetPC().value ) )
     {
@@ -84,6 +84,11 @@ void Debugger::Update( float deltaMilliseconds, u32 cycles )
             ComposeView( cycles );
             Render();
 
+            if ( ShouldCloseWindow() )
+            {
+                return DebuggerUpdateResult::QUIT;
+            }
+
             if ( elapsed.count() < 16.6f ) 
             {
                 std::this_thread::sleep_for( std::chrono::duration< float, std::milli > ( 16.6F - elapsed.count() ) );
@@ -97,15 +102,21 @@ void Debugger::Update( float deltaMilliseconds, u32 cycles )
         {
             ComposeView( cycles );
             Render();
+
+            if ( ShouldCloseWindow() )
+            {
+                return DebuggerUpdateResult::QUIT;
+            }
         }
     }
+
+    return DebuggerUpdateResult::CONTINUE;
 }
 
 void Debugger::ComposeView( u32 cycles )
 {
     glfwPollEvents();
     ImGuiGLFW::NewFrame();
-
     cpuDebugger.ComposeView( *cpu, *memory, cycles, mode );
     videoDebugger.ComposeView( cycles, *video );
 }
@@ -119,4 +130,9 @@ void Debugger::Render()
     ImGui::Render();
     ImGuiGLFW::RenderDrawLists( ImGui::GetDrawData() );
     glfwSwapBuffers( window );
+}
+
+bool Debugger::ShouldCloseWindow() const
+{
+    return glfwGetKey( window, GLFW_KEY_ESCAPE ) || glfwWindowShouldClose( window );
 }

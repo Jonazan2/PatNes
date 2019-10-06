@@ -10,8 +10,12 @@ VideoDebugger::~VideoDebugger()
     delete leftPatternTableBuffer;
     delete rightPatternTableBuffer;
     delete nesPaletteTextureBuffer;
-    delete[] backgroundPalettesTextureBuffer;
-    delete[] spritePalettesTextureBuffer;
+
+    for ( int i = 0; i < 4; ++i )
+    {
+        delete backgroundPalettesTextureBuffer[i];
+        delete spritePalettesTextureBuffer[i];
+    }
 }
 
 void VideoDebugger::CreateTextures()
