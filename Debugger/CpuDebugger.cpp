@@ -13,7 +13,7 @@ CpuDebugger::CpuDebugger()
 
 void CpuDebugger::ComposeView( Cpu &cpu, Memory &memory, u32 cycles, DebuggerMode& mode )
 {
-    ImGui::SetNextWindowPos( ImVec2( 0, 0 ) );
+    ImGui::SetNextWindowPos( ImVec2( 0, 100 ) );
     ImGui::Begin( "Cpu" );
     {
         ImGui::Columns( 2 );

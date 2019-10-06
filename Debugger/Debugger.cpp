@@ -18,8 +18,9 @@ Debugger::Debugger( Cpu *cpu, Memory *memory, Video *video )
     : cpu( cpu )
     , memory( memory )
     , video( video )
-    , mode( DebuggerMode::IDLE )
     , window( nullptr )
+    , mode( DebuggerMode::IDLE )
+    , reset( false )
 {
 }
 
@@ -89,6 +90,12 @@ DebuggerUpdateResult Debugger::Update( float deltaMilliseconds, u32 cycles )
                 return DebuggerUpdateResult::QUIT;
             }
 
+            if ( reset )
+            {
+                reset = false;
+                return DebuggerUpdateResult::RESET;
+            }
+
             if ( elapsed.count() < 16.6f ) 
             {
                 std::this_thread::sleep_for( std::chrono::duration< float, std::milli > ( 16.6F - elapsed.count() ) );
@@ -110,6 +117,12 @@ DebuggerUpdateResult Debugger::Update( float deltaMilliseconds, u32 cycles )
         }
     }
 
+    if ( reset )
+    {
+        reset = false;
+        return DebuggerUpdateResult::RESET;
+    }
+
     return DebuggerUpdateResult::CONTINUE;
 }
 
@@ -117,8 +130,23 @@ void Debugger::ComposeView( u32 cycles )
 {
     glfwPollEvents();
     ImGuiGLFW::NewFrame();
+
+    ComposeEmulatorControlView();
     cpuDebugger.ComposeView( *cpu, *memory, cycles, mode );
     videoDebugger.ComposeView( cycles, *video );
+}
+
+void Debugger::ComposeEmulatorControlView()
+{
+    ImGui::SetNextWindowPos( ImVec2( 0, 0 ) );
+    ImGui::Begin( "PatNes Control" );
+
+    if ( ImGui::Button( "Reset" ) )
+    {
+        reset = true;
+    }
+
+    ImGui::End();
 }
 
 void Debugger::Render()

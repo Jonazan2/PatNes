@@ -6,6 +6,8 @@
 #include "Video.h"
 #include "Debugger/Debugger.h"
 
+#include <assert.h>
+
 static constexpr u32 AVERAGE_CYCLES_PER_FRAME = 29780;
 
 int main(int argc, char** argv)
@@ -40,7 +42,24 @@ int main(int argc, char** argv)
     {
         currentCycles += cpu.Update();
         DebuggerUpdateResult result = debugger.Update( 0.f, currentCycles );
-        quit = ( result == DebuggerUpdateResult::QUIT );
+
+        switch ( result )
+        {
+            case DebuggerUpdateResult::QUIT:
+            {
+                quit = true;
+            }
+            break;
+
+            case DebuggerUpdateResult::RESET:
+            {
+                memory.Reset();
+                video.Reset();
+                cpu.Reset();
+                currentCycles = 0;
+            }
+            break;
+        }
     }
 
     return 0;

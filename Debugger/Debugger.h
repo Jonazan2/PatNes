@@ -48,8 +48,10 @@ private:
 
     GLFWwindow      *window;
     DebuggerMode    mode;
+    bool            reset;
 
     void ComposeView( u32 cycles );
+    void ComposeEmulatorControlView();
     void Render();
     bool ShouldCloseWindow() const;
 };

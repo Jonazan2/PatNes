@@ -8,17 +8,23 @@
 
 
 Memory::Memory( const Cartridge &cartridge, Video &video )
-    : video( video )
+    : cartridge( cartridge )
+    , video( video )
 {
     map = new byte[ 64_KB ];
-    memset( map, 0x00, 64_KB );
 
-    MapCartridge( cartridge );
 }
 
 Memory::~Memory()
 {
-    delete map;
+    delete[] map;
+}
+
+void Memory::Reset()
+{
+    memset( map, 0x00, 64_KB );
+
+    MapCartridge( cartridge );
 }
 
 byte Memory::Read( word address ) const

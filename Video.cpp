@@ -10,8 +10,23 @@ Video::Video( Cartridge *cartridge )
     : cartridge( cartridge )
 {
     memory = new byte[ 16_KB ];
+    frameBuffer = new RGB[ NES_VIDEO_RESOLUTION ];
+
+    Reset();
+}
+
+Video::~Video()
+{
+    delete[] memory;
+    delete[] frameBuffer;
+}
+
+
+void Video::Reset()
+{
     memset( memory, 0x00, 16_KB );
-    MapCartridgeCHRToPPU();    
+    memset( frameBuffer, 0x00, NES_VIDEO_RESOLUTION );
+    MapCartridgeCHRToPPU();
 }
 
 void Video::MapCartridgeCHRToPPU()
@@ -25,8 +40,12 @@ void Video::MapCartridgeCHRToPPU()
     const u32 dataSize = header.chrRomSizeKB * 1_KB;
     memcpy( memory, &cartridgeRom[ offset ], dataSize );
 
-
     memory[ PPUSTATUS_REGISTER ] = 0b1010'0000;
+}
+
+RGB* Video::GetFrameBuffer() const
+{
+    return frameBuffer;
 }
 
 const byte * const Video::GetPPUMemory() const

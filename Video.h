@@ -39,7 +39,13 @@ class Cartridge;
 class Video
 {
 public:
+
+    static constexpr u32 NES_VIDEO_RESOLUTION = 256 * 240;
+
     Video( Cartridge *memory );
+    ~Video();
+
+    void Reset();
 
     /* PPU memory management */
     const byte * const GetPPUMemory() const;
@@ -47,7 +53,7 @@ public:
     void Write( word address, byte data );
 
     /* Frame buffer */
-    byte* GetFrameBuffer() const;
+    RGB* GetFrameBuffer() const;
 
 private:
 
@@ -69,7 +75,7 @@ private:
     byte            *memory;
 
     /* Frame buffer */
-    byte            *frameBuffer;
+    RGB             *frameBuffer;
 
 
     void MapCartridgeCHRToPPU();
