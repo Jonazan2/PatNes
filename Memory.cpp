@@ -12,7 +12,7 @@ Memory::Memory( const Cartridge &cartridge, Video &video )
     , video( video )
 {
     map = new byte[ 64_KB ];
-
+    Reset();
 }
 
 Memory::~Memory()
