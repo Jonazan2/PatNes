@@ -10,7 +10,7 @@ public:
     VideoDebugger() = default;
     ~VideoDebugger();
 
-    void CreateTextures();
+    void CreateTextures( const Video &video );
     void ComposeView( u32 cycles, const Video &video );
 
 private:
@@ -25,6 +25,8 @@ private:
 
     ImTextureID     nesPaletteTextureID;
     RGB             *nesPaletteTextureBuffer;
+
+    ImTextureID     frameBufferTextureID;
 
     ImTextureID     backgroundPalettesTextureID[ 4 ];
     RGB             *backgroundPalettesTextureBuffer[ 4 ];

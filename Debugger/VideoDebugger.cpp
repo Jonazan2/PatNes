@@ -18,7 +18,7 @@ VideoDebugger::~VideoDebugger()
     }
 }
 
-void VideoDebugger::CreateTextures()
+void VideoDebugger::CreateTextures( const Video &video )
 {
     leftPatternTableBuffer = new RGB[ 128 * 128 ];
     ImGuiGLFW::Texture leftPatternTexture = { 0, 128, 128, leftPatternTableBuffer };
@@ -32,6 +32,9 @@ void VideoDebugger::CreateTextures()
     ImGuiGLFW::Texture paletteTexture = { 0, 16, 4, nesPaletteTextureBuffer };
     nesPaletteTextureID = ImGuiGLFW::CreateTexture( paletteTexture );
     GenerateNesPaletteTexture();
+
+    ImGuiGLFW::Texture frameBufferTexture = { 0, 256, 240, video.GetFrameBuffer() };
+    frameBufferTextureID = ImGuiGLFW::CreateTexture( frameBufferTexture );
 
     for ( int i = 0; i < 4; ++i )
     {
@@ -48,6 +51,13 @@ void VideoDebugger::CreateTextures()
 void VideoDebugger::ComposeView( u32 cycles, const Video &video )
 {
     UpdatePatternTable( video, 0x0000, leftPatternTableBuffer );
+
+    ImGui::SetNextWindowSize( ImVec2( 560, 510 ), ImGuiCond_FirstUseEver );
+    ImGui::Begin( "FrameBuffer" );
+    ImGui::Image( frameBufferTextureID, ImVec2( 512, 480 ) );
+    ImGui::End();
+
+
     ImGui::SetNextWindowSize( ImVec2( 560, 560 ), ImGuiCond_FirstUseEver );
     ImGui::Begin( "VRAM Left" );
     ImGui::Image( leftPatternTableTextureID, ImVec2( 512, 512 ) );

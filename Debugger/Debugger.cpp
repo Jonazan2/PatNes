@@ -54,7 +54,7 @@ void Debugger::StartDebugger()
 
     ImGuiGLFW::Init( window, true );
     ImGui::StyleColorsDark();
-    videoDebugger.CreateTextures();
+    videoDebugger.CreateTextures( *video );
 
     Update(0.f,0);
 }

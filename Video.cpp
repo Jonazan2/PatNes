@@ -25,7 +25,12 @@ Video::~Video()
 void Video::Reset()
 {
     memset( memory, 0x00, 16_KB );
-    memset( frameBuffer, 0x00, NES_VIDEO_RESOLUTION );
+
+    for ( u32 i = 0; i < NES_VIDEO_RESOLUTION; ++i )
+    {
+        frameBuffer[ i ] = PINK;
+    }
+
     MapCartridgeCHRToPPU();
 }
 
