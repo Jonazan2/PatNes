@@ -54,7 +54,10 @@ void Debugger::StartDebugger()
 
     ImGuiGLFW::Init( window, true );
     ImGui::StyleColorsDark();
+    ImGuiIO& io = ImGui::GetIO();
+    io.FontGlobalScale = 2.f;
     videoDebugger.CreateTextures( *video );
+    cpuDebugger.GenerateDisassemblerInstructionMask( *memory );
 
     Update(0.f,0);
 }

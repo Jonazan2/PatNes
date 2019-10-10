@@ -11,14 +11,50 @@ CpuDebugger::CpuDebugger()
 {
 }
 
+void CpuDebugger::GenerateDisassemblerInstructionMask( Memory &memory )
+{
+    /* Instructions are represented by 1, data as 0 */
+
+    disassemblerInstructionMask.reset();
+
+    u32 offset = 1;
+    for ( u32 i = 0; i <= 0xFFFF; i+= offset )
+    {
+        if ( i >= 0x2000 && i < 0x4020)
+        {
+            /* 2000 to 401F is data */
+            i = 0x4020;
+        }
+        else
+        {
+            const byte opcode = memory.Read( i );
+            std::unordered_map< byte, OpcodeInfo >::const_iterator it = NES_OPCODE_INFO.find( opcode );
+            if ( it != NES_OPCODE_INFO.end() )
+            {
+                const OpcodeInfo opcodeInfo = it->second;
+                const byte addressModeIndex = static_cast< byte >( opcodeInfo.addressMode );
+                const byte opcodeLength = ADDRESS_MODE_OPCODE_LENGTH [ addressModeIndex ];
+                offset = opcodeLength;
+                disassemblerInstructionMask.set( i );
+            }
+        }
+    }
+}
+
+bool CpuDebugger::IsAddresAnInstruction( u32 address ) const
+{
+    return disassemblerInstructionMask[ address ];
+}
+
 void CpuDebugger::ComposeView( Cpu &cpu, Memory &memory, u32 cycles, DebuggerMode& mode )
 {
     ImGui::SetNextWindowPos( ImVec2( 0, 100 ) );
     ImGui::Begin( "Cpu" );
     {
         ImGui::Columns( 2 );
-        ImGui::SetColumnWidth( 0, 200.f );
-        ImGui::SetColumnWidth( 1, 200.f );
+        const float columnWidth = ImGui::GetWindowWidth() / 2.f;
+        ImGui::SetColumnWidth( 0, columnWidth );
+        ImGui::SetColumnWidth( 1, columnWidth );
         {
             ImGui::Text( "Flags:" );
 
@@ -65,9 +101,9 @@ void CpuDebugger::ComposeView( Cpu &cpu, Memory &memory, u32 cycles, DebuggerMod
         bool goToPcPosition = false;
         ImGui::Separator();
         {
-            if (ImGui::Button("Next instruction")) {
+            if ( ImGui::Button( "Next instruction" ) )
+            {
                 mode = DebuggerMode::BREAKPOINT;
-                instructionJump = false;
             }
 
             ImGui::SameLine();
@@ -94,29 +130,82 @@ void CpuDebugger::ComposeView( Cpu &cpu, Memory &memory, u32 cycles, DebuggerMod
 
             ImGui::BeginGroup();
             ImGui::BeginChild("##scrollingregion");
-            ImGuiListClipper clipper(0xFFFF, ImGui::GetTextLineHeightWithSpacing());
 
-            if ( ( mode == DebuggerMode::IDLE || mode == DebuggerMode::BREAKPOINT ) && !instructionJump )
+            const float height = ImGui::GetWindowHeight();
+            const float lineHeight = ImGui::GetTextLineHeightWithSpacing();
+            const byte rows = height / lineHeight;
+
+            ImGuiListClipper clipper( 0xFFFF, lineHeight );
+            u32 startAddress = 0;
+            u32 endAddress = 0;
+            if (clipper.DisplayStart != 0x0000)
             {
-                ImGui::SetScrollFromPosY( ImGui::GetCursorStartPos().y + ( cpu.GetPC().value * ImGui::GetTextLineHeightWithSpacing() ), 0.5f );
-                instructionJump = true;
-                clipper.DisplayEnd += 16;
-
+                startAddress = clipper.DisplayStart;
+                const word PC = cpu.GetPC().value;
                 if ( goToPcPosition )
                 {
-                    clipper.DisplayStart = cpu.GetPC().value;
+                    startAddress = PC;
+                }
+                else if ( mode == DebuggerMode::BREAKPOINT && PC < startAddress )
+                {
+                    startAddress = PC;
+                    instructionJump = false;
+                }
+                else
+                {
+                    while ( !IsAddresAnInstruction( startAddress ))
+                    {
+                        startAddress--;
+                    }
+                }
+
+                endAddress = startAddress;
+                u32 realRows = 0;
+                while ( realRows !=  rows )
+                {
+                    const byte opcode = memory.Read( endAddress );
+                    std::unordered_map< byte, OpcodeInfo >::const_iterator it = NES_OPCODE_INFO.find( opcode );
+                    if ( it == NES_OPCODE_INFO.end() )
+                    {
+                        endAddress++;
+                    }
+                    else
+                    {
+                        realRows++;
+                        if (realRows == rows )
+                        {
+                            break;
+                        }
+
+                        const byte addressModeIndex = static_cast< byte >( it->second.addressMode );
+                        const byte opcodeLength = ADDRESS_MODE_OPCODE_LENGTH [ addressModeIndex ];
+                        endAddress += opcodeLength;
+                    }
+                }
+
+                if (endAddress > 0xFFFF)
+                {
+                    endAddress = 0xFFFF;
                 }
             }
-            else
+
+            const word PC = cpu.GetPC().value;
+            const u32 middlePoint = ( endAddress - startAddress ) / 2;
+            if ( mode == DebuggerMode::BREAKPOINT && PC > middlePoint + startAddress )
             {
-                clipper.DisplayEnd = clipper.DisplayStart + 30;
+                ImGui::SetScrollFromPosY( ImGui::GetCursorStartPos().y + ( cpu.GetPC().value * ImGui::GetTextLineHeightWithSpacing() ), 0.f );
+            }
+            else if ( mode == DebuggerMode::IDLE && !instructionJump || goToPcPosition )
+            {
+                ImGui::SetScrollFromPosY( ImGui::GetCursorStartPos().y + ( cpu.GetPC().value * ImGui::GetTextLineHeightWithSpacing() ), 0.f );
+                instructionJump = true;
             }
 
             u32 opcodeLengthOffset = 1;
-            for ( u32 i = clipper.DisplayStart; i <= clipper.DisplayEnd; i += opcodeLengthOffset ) 
+            for ( u32 i = startAddress; i <= endAddress; i += opcodeLengthOffset ) 
             {
                 char address[32];
-                sprintf( address, "0x%02X", i);
+                sprintf( address, "0x%04X", i);
                 
                 char text[128];
 
@@ -125,7 +214,8 @@ void CpuDebugger::ComposeView( Cpu &cpu, Memory &memory, u32 cycles, DebuggerMod
                 if ( it == NES_OPCODE_INFO.end() )
                 {
                     /* Invalid opcode */
-                    sprintf(text, "%-*s%-*s%-*s", perItemWidth, address, perItemWidth, "INVALID", perItemWidth, "-" );
+                    opcodeLengthOffset = 1;
+                    continue;
                 }
                 else
                 {
