@@ -124,8 +124,8 @@ void CpuDebugger::ComposeView( Cpu &cpu, Memory &memory, u32 cycles, DebuggerMod
             }
         }
         {
-            int perItemWidth = 25;
-            ImGui::Text("%-*s%-*s%-*s", perItemWidth, "Address", perItemWidth, "Opcode", perItemWidth, "Mnemonic", perItemWidth, "Address Mode");
+            static const int PER_ITEM_WIDTH = 25;
+            ImGui::Text("%-*s%-*s%-*s", PER_ITEM_WIDTH, "Address", PER_ITEM_WIDTH, "Mnemonic", PER_ITEM_WIDTH, "Data");
             ImGui::Separator();
 
             ImGui::BeginGroup();
@@ -190,23 +190,19 @@ void CpuDebugger::ComposeView( Cpu &cpu, Memory &memory, u32 cycles, DebuggerMod
             }
 
             const word PC = cpu.GetPC().value;
-            const u32 middlePoint = ( endAddress - startAddress ) / 2;
-            if ( mode == DebuggerMode::BREAKPOINT && PC > middlePoint + startAddress )
+            if ( mode == DebuggerMode::BREAKPOINT && PC > ( endAddress - 1 ) )
             {
-                ImGui::SetScrollFromPosY( ImGui::GetCursorStartPos().y + ( cpu.GetPC().value * ImGui::GetTextLineHeightWithSpacing() ), 0.f );
+                ImGui::SetScrollFromPosY( ImGui::GetCursorStartPos().y + ( PC * ImGui::GetTextLineHeightWithSpacing() ), 0.f );
             }
             else if ( mode == DebuggerMode::IDLE && !instructionJump || goToPcPosition )
             {
-                ImGui::SetScrollFromPosY( ImGui::GetCursorStartPos().y + ( cpu.GetPC().value * ImGui::GetTextLineHeightWithSpacing() ), 0.f );
+                ImGui::SetScrollFromPosY( ImGui::GetCursorStartPos().y + ( PC * ImGui::GetTextLineHeightWithSpacing() ), 0.f );
                 instructionJump = true;
             }
 
             u32 opcodeLengthOffset = 1;
             for ( u32 i = startAddress; i <= endAddress; i += opcodeLengthOffset ) 
             {
-                char address[32];
-                sprintf( address, "0x%04X", i);
-                
                 char text[128];
 
                 const byte opcode = memory.Read( i );
@@ -219,16 +215,33 @@ void CpuDebugger::ComposeView( Cpu &cpu, Memory &memory, u32 cycles, DebuggerMod
                 }
                 else
                 {
-                    OpcodeInfo opcodeInfo = NES_OPCODE_INFO.at( opcode );
-                                        
-                    char mnemonic[ 32 ];
-                    sprintf( mnemonic, "%s", opcodeInfo.mnemonic );
+                    char address[32];
+                    sprintf( address, "0x%04X", i);
 
+                    const OpcodeInfo &opcodeInfo = it->second;
                     const byte addressModeIndex = static_cast< byte >( opcodeInfo.addressMode );
-                    const char *addressMode = ADDRESS_MODE_STRING[ addressModeIndex ]; 
-                    sprintf( text, "%-*s%-*s%-*s", perItemWidth, address, perItemWidth, mnemonic, perItemWidth, addressMode );
-                    
                     const byte opcodeLength = ADDRESS_MODE_OPCODE_LENGTH [ addressModeIndex ];
+                    
+                    char data[32];
+                    if ( opcodeLength == 1 )
+                    {
+                        sprintf(data, "");
+                    }
+                    else if ( opcodeLength == 2 )
+                    {
+                        const byte opcodeData = memory.Read( i + 1 );
+                        sprintf( data, "0x%02X", opcodeData );
+                    }
+                    else if ( opcodeLength == 3 )
+                    {
+                        word wordData;
+                        wordData = memory.Read( i + 2 ) << 8;
+                        wordData |= memory.Read( i + 1 );
+                        sprintf( data, "0x%04X", wordData );
+                    }
+                    
+                    sprintf( text, "%-*s%-*s%-*s", PER_ITEM_WIDTH, address, PER_ITEM_WIDTH, opcodeInfo.mnemonic, PER_ITEM_WIDTH, data );
+
                     opcodeLengthOffset = opcodeLength;
                 }
 
