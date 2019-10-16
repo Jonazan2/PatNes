@@ -4,10 +4,12 @@
 #include <assert.h>
 
 #include "Cartridge.h"
+#include "Memory.h"
 
 
-Video::Video( Cartridge *cartridge )
+Video::Video( Cartridge *cartridge, Memory *cpuMemory )
     : cartridge( cartridge )
+    , cpuMemory( cpuMemory )
 {
     memory = new byte[ 16_KB ];
     frameBuffer = new RGB[ NES_VIDEO_RESOLUTION ];
@@ -32,6 +34,15 @@ void Video::Reset()
     }
 
     MapCartridgeCHRToPPU();
+
+    cpuMemory->Write( PPUCTRL_REGISTER, 0x00 );
+    cpuMemory->Write( PPUMASK_REGISTER, 0x00 );
+    cpuMemory->Write( PPUSTATUS_REGISTER, 0b1010'0000 );
+    cpuMemory->Write( OAMA_REGISTER, 0x00 );
+    cpuMemory->Write( OAMADATA_REGISTER, 0x00 );
+    cpuMemory->Write( PPUSCROLL_REGISTER, 0x00 );
+    cpuMemory->Write( PPUADDR_REGISTER, 0x00 );
+    cpuMemory->Write( PPUDATA_ADDRESS, 0x00 );
 }
 
 void Video::MapCartridgeCHRToPPU()
@@ -66,4 +77,9 @@ byte Video::Read( word address ) const
 void Video::Write( word address, byte data )
 {
     memory[ address ] = data;
+}
+
+void Video::Update( u32 cycles )
+{
+
 }

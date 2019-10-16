@@ -13,13 +13,21 @@
     |                     |                             |
     |  0x1000 - 0x1FFF    |  Pattern table 1            |
     |                     |                             |
-    |  0x2000 - 0x23FF    |  Nametable 0                |
+    |  0x2000 - 0x23BF    |  Nametable 0                |
     |                     |                             |
-    |  0x2400 - 0x27FF    |  Nametable 1                |
+    |  0x23C0 - 0x23FF    |  Attribute table 0          |
+    |                     |                             |
+    |  0x2400 - 0x27BF    |  Nametable 1                |
+    |                     |                             |
+    |  0x27C0 - 0x27FF    |  Attribute table 1          |
     |                     |                             |
     |  0x2800 - 0x2BFF    |  Nametable 2                |
     |                     |                             |
-    |  0x2C00 - 0x2FFF    |  Nametable 3                |
+    |  0x2BC0 - 0x2BFF    |  Attribute table 2          |
+    |                     |                             |
+    |  0x2C00 - 0x2FBF    |  Nametable 3                |
+    |                     |                             |
+    |  0x2FC0 - 0x2FFF    |  Attribute table 3          |
     |                     |                             |
     |  0x3000 - 0x3EFF    |  Mirrors of 0x2000 0x2EFF   |
     |                     |                             |
@@ -35,27 +43,13 @@
 
 
 class Cartridge;
+class Memory;
 
 class Video
 {
 public:
 
     static constexpr u32 NES_VIDEO_RESOLUTION = 256 * 240;
-
-    Video( Cartridge *memory );
-    ~Video();
-
-    void Reset();
-
-    /* PPU memory management */
-    const byte * const GetPPUMemory() const;
-    byte Read( word address ) const;
-    void Write( word address, byte data );
-
-    /* Frame buffer */
-    RGB* GetFrameBuffer() const;
-
-private:
 
     /* PPU Register addresses */
     static constexpr word PPUCTRL_REGISTER      = 0x2000;
@@ -68,8 +62,25 @@ private:
     static constexpr word PPUDATA_ADDRESS       = 0x2007;
 
 
+    Video( Cartridge *cartridge, Memory *cpuMemory );
+    ~Video();
+
+    void Reset();
+
+    void Update( u32 cycles );
+
+    /* PPU memory management */
+    const byte * const GetPPUMemory() const;
+    byte Read( word address ) const;
+    void Write( word address, byte data );
+
+    /* Frame buffer */
+    RGB* GetFrameBuffer() const;
+
+private:
     /* Associated Systems */
     Cartridge       *cartridge;
+    Memory          *cpuMemory;
 
     /* PPU memory layout */
     byte            *memory;

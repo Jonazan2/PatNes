@@ -41,7 +41,7 @@ class Memory
 {
 public:
 
-    Memory( const Cartridge &cartridge, Video &video );
+    Memory( const Cartridge *cartridge );
     ~Memory();
 
     void Reset();
@@ -55,12 +55,11 @@ public:
 private:
 
     /* Associated NES systems */
-    const Cartridge     &cartridge;
-    Video               &video;
+    const Cartridge     *cartridge;
 
     /* NES memory map */
     byte                *map;
 
 
-    void MapCartridge( const Cartridge &cartridge );
+    void MapCartridge();
 };

@@ -7,9 +7,8 @@
 #include "Video.h"
 
 
-Memory::Memory( const Cartridge &cartridge, Video &video )
+Memory::Memory( const Cartridge *cartridge )
     : cartridge( cartridge )
-    , video( video )
 {
     map = new byte[ 64_KB ];
     Reset();
@@ -24,15 +23,15 @@ void Memory::Reset()
 {
     memset( map, 0x00, 64_KB );
 
-    MapCartridge( cartridge );
+    MapCartridge();
 }
 
 byte Memory::Read( word address ) const
 {
-    if ( address >= 0x2000 && address <= 0x2007 ) 
+    if ( address >= 0x2000 && address <= 0x3FFF )
     {
-        /* PPU memory */
-        return video.Read( address );
+        const word mirroredAddress = ( address % 8 ) + 0x2000;
+        return map[ mirroredAddress ];
     }
     else
     {
@@ -42,10 +41,10 @@ byte Memory::Read( word address ) const
 
 void Memory::Write( word address, byte data )
 {
-    if ( address >= 0x2000 && address <= 0x2007 ) 
+    if ( address >= 0x2000 && address <= 0x3FFF )
     {
-        /* PPU memory */
-        video.Write( address, data );
+        const word mirroredAddress = ( address % 8 ) + 0x2000;
+        map[ mirroredAddress ] = data;
     }
     else
     {
@@ -58,13 +57,15 @@ const byte *const Memory::GetMemoryMap() const
     return map;
 }
 
-void Memory::MapCartridge( const Cartridge &cartridge )
+void Memory::MapCartridge()
 {
+    assert( cartridge != nullptr );
+
     /* For now only support NROM with PRG ROM of 16KB and no ram */
-    Cartridge::Header header = cartridge.GetHeader();
+    Cartridge::Header header = cartridge->GetHeader();
     assert( header.mapper == 0x00 && header.prgRomSizeKB == 16  && !header.hasPRGRam);
 
-    const byte * const rom = cartridge.GetRom();
+    const byte * const rom = cartridge->GetRom();
 
     /* Map the PRG ROM to 0x8000 */
     memcpy(&map[0x8000], &rom[0x0010], 16_KB );

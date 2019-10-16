@@ -28,21 +28,21 @@ int main(int argc, char** argv)
 
     cartridge.PrintDetails();
 
-    Video video( &cartridge );
-    Memory memory( cartridge, video );
+    Memory memory( &cartridge );
+    Video video( &cartridge, &memory );
     Cpu cpu( &memory );
 
     Debugger debugger( &cpu, &memory, &video );
     debugger.StartDebugger();
 
-    /* Run a few frames for now */
     bool quit = false;
     u32 currentCycles = 0;
-    while ( currentCycles < AVERAGE_CYCLES_PER_FRAME && !quit )
+    while ( !quit )
     {
         currentCycles += cpu.Update();
-        DebuggerUpdateResult result = debugger.Update( 0.f, currentCycles );
+        video.Update( currentCycles );
 
+        const DebuggerUpdateResult result = debugger.Update( 0.f, currentCycles );
         switch ( result )
         {
             case DebuggerUpdateResult::QUIT:
@@ -59,6 +59,11 @@ int main(int argc, char** argv)
                 currentCycles = 0;
             }
             break;
+        }
+
+        if ( currentCycles >= AVERAGE_CYCLES_PER_FRAME )
+        {
+            currentCycles = 0;
         }
     }
 
