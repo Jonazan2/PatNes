@@ -41,13 +41,13 @@ class Memory
 {
 public:
 
-    Memory( const Cartridge *cartridge );
+    Memory( const Cartridge *cartridge, Video *video );
     ~Memory();
 
     void Reset();
 
     /* Memory management */
-    byte Read( word address ) const;
+    byte Read( word address );
     void Write( word address, byte data );
 
     const byte *const GetMemoryMap() const;
@@ -56,10 +56,14 @@ private:
 
     /* Associated NES systems */
     const Cartridge     *cartridge;
+    Video               *video;
 
     /* NES memory map */
     byte                *map;
 
+    bool                IsAddressLatchClear;
+    word                currentVRamAddress;
 
     void MapCartridge();
+    void ResetAddressLatch();
 };

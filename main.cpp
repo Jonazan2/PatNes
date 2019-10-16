@@ -28,8 +28,8 @@ int main(int argc, char** argv)
 
     cartridge.PrintDetails();
 
-    Memory memory( &cartridge );
-    Video video( &cartridge, &memory );
+    Video video( &cartridge );
+    Memory memory( &cartridge, &video );
     Cpu cpu( &memory );
 
     Debugger debugger( &cpu, &memory, &video );

@@ -43,7 +43,6 @@
 
 
 class Cartridge;
-class Memory;
 
 class Video
 {
@@ -62,7 +61,7 @@ public:
     static constexpr word PPUDATA_ADDRESS       = 0x2007;
 
 
-    Video( Cartridge *cartridge, Memory *cpuMemory );
+    Video( Cartridge *cartridge );
     ~Video();
 
     void Reset();
@@ -80,7 +79,6 @@ public:
 private:
     /* Associated Systems */
     Cartridge       *cartridge;
-    Memory          *cpuMemory;
 
     /* PPU memory layout */
     byte            *memory;
