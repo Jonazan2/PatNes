@@ -7,9 +7,10 @@
 
 VideoDebugger::~VideoDebugger()
 {
-    delete leftPatternTableBuffer;
-    delete rightPatternTableBuffer;
-    delete nesPaletteTextureBuffer;
+    delete[] leftPatternTableBuffer;
+    delete[] rightPatternTableBuffer;
+    delete[] nesPaletteTextureBuffer;
+    delete universalBackgroundColorBuffer;
 
     for ( int i = 0; i < 4; ++i )
     {
@@ -35,6 +36,10 @@ void VideoDebugger::CreateTextures( const Video &video )
 
     ImGuiGLFW::Texture frameBufferTexture = { 0, 256, 240, video.GetFrameBuffer() };
     frameBufferTextureID = ImGuiGLFW::CreateTexture( frameBufferTexture );
+
+    universalBackgroundColorBuffer = new RGB();
+    ImGuiGLFW::Texture universalBackgroundTexture = { 0, 1, 1, universalBackgroundColorBuffer };
+    universalBackgroundColorID = ImGuiGLFW::CreateTexture( universalBackgroundTexture );
 
     for ( int i = 0; i < 4; ++i )
     {
@@ -70,9 +75,16 @@ void VideoDebugger::ComposeView( u32 cycles, const Video &video )
     ImGui::End();
 
     {
+        const u32 lineHeight = ImGui::GetTextLineHeight();
+
         ImGui::SetNextWindowSize( ImVec2( 260, 70 ), ImGuiCond_FirstUseEver );
         ImGui::Begin( "NES Palette" );
         ImGui::Image( nesPaletteTextureID, ImVec2( 256, 64 ) );
+
+        UpdateUniversalBackgroundColour( video );
+        ImGui::Text( "Background universal color:\t" );
+        ImGui::SameLine();
+        ImGui::Image( universalBackgroundColorID, ImVec2( 24, 24 ) );
 
         UpdateTexturesOfCurrentPalettes( video, 0x3F01, backgroundPalettesTextureBuffer );
         for ( byte paletteIndex = 0; paletteIndex < 4; ++paletteIndex )
@@ -81,7 +93,7 @@ void VideoDebugger::ComposeView( u32 cycles, const Video &video )
             sprintf( text, "Background Palette %i:\t\t", paletteIndex );
             ImGui::Text( text );
             ImGui::SameLine();
-            ImGui::Image( backgroundPalettesTextureID[ paletteIndex ], ImVec2( 48, 12 ) );
+            ImGui::Image( backgroundPalettesTextureID[ paletteIndex ], ImVec2( 96, 24 ) );
         }
 
         UpdateTexturesOfCurrentPalettes( video, 0x3F11, spritePalettesTextureBuffer );
@@ -91,7 +103,7 @@ void VideoDebugger::ComposeView( u32 cycles, const Video &video )
             sprintf( text, "Sprite Palette %i:\t\t\t", paletteIndex );
             ImGui::Text( text );
             ImGui::SameLine();
-            ImGui::Image( spritePalettesTextureID[ paletteIndex ], ImVec2( 48, 12 ) );
+            ImGui::Image( spritePalettesTextureID[ paletteIndex ], ImVec2( 96, 24 ) );
         }
         ImGui::End();
     }
@@ -142,6 +154,16 @@ void VideoDebugger::GenerateNesPaletteTexture()
     {
         nesPaletteTextureBuffer[ color ] = NES_PALETTE_COLORS[ color ];
     }
+}
+
+void VideoDebugger::UpdateUniversalBackgroundColour( const Video &video )
+{
+    const byte * const ppuMemory = video.GetPPUMemory();
+    assert( ppuMemory != nullptr );
+    assert( universalBackgroundColorBuffer != nullptr );
+
+    const byte colorIndex = ppuMemory[ 0x3F00 ];
+    *universalBackgroundColorBuffer = NES_PALETTE_COLORS[ colorIndex ];
 }
 
 void VideoDebugger::UpdateTexturesOfCurrentPalettes( const Video &video, word address, RGB **buffer )
