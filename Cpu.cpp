@@ -804,18 +804,16 @@ short Cpu::BIT( word address )
 
 short Cpu::JMP( word address )
 {
-    PC.value = address;
-    
-    return 1;
+    Register finalAddress;
+    finalAddress.low = memory->Read( address );
+    finalAddress.hi = memory->Read( address + 1 );
+    PC = finalAddress;
+    return 3;
 }
 
 short Cpu::JMPA( word address )
 {
-    Register finalAddress;
-    finalAddress.low = memory->Read( address );
-    finalAddress.hi = memory->Read( address + 1 );
-
-    PC = finalAddress;
+    PC.value = address;
     return 3;
 }
 
