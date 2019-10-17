@@ -64,7 +64,7 @@ short Cpu::ExecuteInstruction( byte opcode )
 
     /* Check if the instruction can't be mapped so it must be a single byte instruction */
     const byte opcodeLowerNibble = opcode & 0b0000'1111;    
-    if ( opcodeLowerNibble == 0x08 || opcodeLowerNibble == 0x0A )
+    if ( opcodeLowerNibble == 0x08 || ( opcodeLowerNibble == 0x0A && opcode >= 0x8A ) )
     {
         return ExecuteSingleByteInstruction( opcode );  
     }
