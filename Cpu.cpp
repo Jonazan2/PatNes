@@ -893,10 +893,11 @@ short Cpu::JSR()
     Register previousPC = PC;
     --previousPC.value;
 
+    /* Save the current address in the stack */
     PushToStack( previousPC.hi );
     PushToStack( previousPC.low );
 
-    /* Push the address */
+    /* Jump to the new address */
     PC.value = GetAbsoluteAddress();
 
     return 6;
@@ -913,8 +914,8 @@ short Cpu::RTI()
 short Cpu::RTS()
 {
     Register storedPC;
-    PopFromStack( storedPC.hi );
     PopFromStack( storedPC.low );
+    PopFromStack( storedPC.hi );
 
     PC = storedPC;
     ++PC.value;
@@ -930,8 +931,8 @@ void Cpu::PushToStack( byte data )
 
 void Cpu::PopFromStack( byte &data )
 {
-    data = memory->Read( GetAbsoluteStackAddress() );
     ++stackPointer;
+    data = memory->Read( GetAbsoluteStackAddress() );
 }
 
 /* ------------------- INSTRUCTIONS -------------------*/
