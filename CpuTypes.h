@@ -5,6 +5,7 @@
 
 #include "Types.h"
 
+constexpr u32 AVERAGE_CYCLES_PER_FRAME = 29780;
 
 enum class CpuAddressMode : byte
 {

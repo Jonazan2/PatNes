@@ -12,6 +12,7 @@
 #include "ImguiWrapper/imgui_impl_glfw_gl3.h"
 
 #include "../Video.h"
+#include "../CpuTypes.h"
 
 
 Debugger::Debugger( Cpu *cpu, Memory *memory, Video *video )
@@ -107,8 +108,8 @@ DebuggerUpdateResult Debugger::Update( float deltaMilliseconds, u32 cycles )
     }
     else
     {
-        /* In normal mode just render the debugger at the same rate as the emulator: random number for now */
-        if ( cycles % 10000 )
+        /* In normal mode just render the debugger at the same rate as the emulator */
+        if ( cycles >=  AVERAGE_CYCLES_PER_FRAME )
         {
             ComposeView( cycles );
             Render();

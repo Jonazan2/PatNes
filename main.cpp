@@ -3,12 +3,12 @@
 #include "Cartridge.h"
 #include "Memory.h"
 #include "Cpu.h"
+#include "CpuTypes.h"
 #include "Video.h"
 #include "Debugger/Debugger.h"
 
 #include <assert.h>
 
-static constexpr u32 AVERAGE_CYCLES_PER_FRAME = 29780;
 
 int main(int argc, char** argv)
 {
