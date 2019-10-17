@@ -772,6 +772,8 @@ short Cpu::DEC( word address )
     const byte bit7result = result & 0b1000'0000;
     ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
     
+    memory->Write( address, result );
+
     return 3;
 }
 
@@ -784,6 +786,8 @@ short Cpu::INC( word address )
 
     const byte bit7result = result & 0b1000'0000;
     ( bit7result == 0b1000'0000 ) ? RaiseFlag( Cpu::Flags::Negative ) : ClearFlag( Cpu::Flags::Negative );
+
+    memory->Write( address, result );
 
     return 3;
 }
