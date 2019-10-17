@@ -4,6 +4,7 @@
 #include "../Cpu.h"
 #include "CpuDebugger.h"
 #include "VideoDebugger.h"
+#include "MemoryDebugger.h"
 
 
 enum class DebuggerMode : byte 
@@ -45,6 +46,7 @@ private:
     /* Specific Debuggers */
     CpuDebugger     cpuDebugger;
     VideoDebugger   videoDebugger;
+    MemoryDebugger  memoryDebugger;
 
     GLFWwindow      *window;
     DebuggerMode    mode;

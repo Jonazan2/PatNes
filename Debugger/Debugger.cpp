@@ -138,6 +138,7 @@ void Debugger::ComposeView( u32 cycles )
     ComposeEmulatorControlView();
     cpuDebugger.ComposeView( *cpu, *memory, cycles, mode );
     videoDebugger.ComposeView( cycles, *video );
+    memoryDebugger.ComposeView( memory );
 }
 
 void Debugger::ComposeEmulatorControlView()
