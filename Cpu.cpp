@@ -11,13 +11,13 @@
 
 const std::unordered_map< Cpu::Flags, const char * > Cpu::FLAGS_STRING  =
 {
-    { Cpu::Flags::Negative,         "Negative"          },
-    { Cpu::Flags::Overflow,         "Overflow"          },
-    { Cpu::Flags::Break,            "Break"             },
-    { Cpu::Flags::DecimalMode,      "Decimal Mode"      },
-    { Cpu::Flags::InterruptDisable, "Interrupt Disable" },
-    { Cpu::Flags::Zero,             "Zero"              },
     { Cpu::Flags::Carry,            "Carry"             },
+    { Cpu::Flags::Zero,             "Zero"              },
+    { Cpu::Flags::InterruptDisable, "Interrupt Disable" },
+    { Cpu::Flags::DecimalMode,      "Decimal Mode"      },
+    { Cpu::Flags::Break,            "Break"             },
+    { Cpu::Flags::Overflow,         "Overflow"          },
+    { Cpu::Flags::Negative,         "Negative"          },
 };
 
 
@@ -945,7 +945,7 @@ short Cpu::PHP()
 
 short Cpu::PLP()
 {
-    PushToStack( pRegister );
+    PopFromStack( pRegister );
     return 4;
 }
 
@@ -957,7 +957,7 @@ short Cpu::PHA()
 
 short Cpu::PLA()
 { 
-    PushToStack( accumulator );
+    PopFromStack( accumulator );
     return 4;
 }
 
