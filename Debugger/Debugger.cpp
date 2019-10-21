@@ -72,6 +72,8 @@ void Debugger::CloseDebugger()
 
 DebuggerUpdateResult Debugger::Update( float deltaMilliseconds, u32 cycles )
 {
+    memoryDebugger.UpdateWatcher( memory, mode );
+
     if ( mode == DebuggerMode::BREAKPOINT  || mode == DebuggerMode::IDLE || cpuDebugger.HasAddressABreakpoint( cpu->GetPC().value ) )
     {
         /* if the emulator has reached a breakpoint we render the debugger at 60fps */
@@ -138,7 +140,7 @@ void Debugger::ComposeView( u32 cycles )
     ComposeEmulatorControlView();
     cpuDebugger.ComposeView( *cpu, *memory, cycles, mode );
     videoDebugger.ComposeView( cycles, *video );
-    memoryDebugger.ComposeView( memory );
+    memoryDebugger.ComposeView( memory, mode );
 }
 
 void Debugger::ComposeEmulatorControlView()

@@ -1,12 +1,14 @@
 #include "MemoryDebugger.h"
 
+#include <stdio.h>
 
 #include "Imgui/imgui.h"
 
+#include "Debugger.h"
 #include "../Memory.h"
 
 
-void MemoryDebugger::ComposeView( const Memory *memory )
+void MemoryDebugger::ComposeView( const Memory *memory, DebuggerMode& mode )
 {
     assert( memory != nullptr );
     const byte *map = memory->GetMemoryMap();
@@ -71,5 +73,106 @@ void MemoryDebugger::ComposeView( const Memory *memory )
     clipper.End();
     ImGui::PopStyleVar( 2 );
     ImGui::EndChild();
+
+
+    /* Watcher */
+    ImGui::Separator();
+
+    ImGui::PushItemWidth( 160 );
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text( "Add watcher:" );
+    ImGui::SameLine();
+    ImGui::PopItemWidth();
+
+    ImGui::PushItemWidth( 70 );
+    char input[ 64 ];
+    memset( input, 0, sizeof( char ) * 64 );
+    if ( ImGui::InputText( "##addr", input, 64, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue ) )
+    {
+        u32 address;
+        if ( sscanf( input, "%X", &address ) )
+        {
+            word validAddress = address & 0xFFFF;
+            watcher.insert( { validAddress, map[ validAddress ] } );
+        }
+    }
+    ImGui::PopItemWidth();
+
+    if ( !watcher.empty() )
+    {
+        ImGui::SameLine();
+        ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(1.0f, 0.6f, 0.6f).Value);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(0.95f, 0.5f, 0.5f).Value);
+        if ( ImGui::Button( "Clear all watchers" ) )
+        {
+            watcher.clear();
+            mode = DebuggerMode::RUNNING;
+        }
+        ImGui::PopStyleColor(2);
+        ImGui::SameLine();
+
+        ImGui::Checkbox("Data breakpoint", &watcherAsBreakpoint);
+
+        ImGui::Separator();
+        ImGui::Columns(3, "breakpoints");
+
+        std::map<word, byte>::iterator it;
+        for (it = watcher.begin(); it != watcher.end(); ) {
+            word address = it->first;
+            byte data = it->second;
+
+            char label[64];
+            sprintf(label, "0x%04X:  0x%02X  %c", address, data, (data >= 32 && data < 128) ? data : '.');
+            if (ImGui::Selectable(label)) {
+                it = watcher.erase(it);
+            } else {
+                ++it;
+            }
+            ImGui::NextColumn();
+        }
+        ImGui::Columns(1);
+        ImGui::Separator();
+    }
+
     ImGui::End();
+}
+
+void MemoryDebugger::UpdateWatcher( const Memory* memory, DebuggerMode& mode )
+{
+    assert( memory != nullptr );
+    const byte *map = memory->GetMemoryMap();
+    assert( map != nullptr );
+
+    if ( !watcher.empty() )
+    {
+        if ( watcherAsBreakpoint && HasWatcherDataChanged( map ) )
+        {
+            mode = DebuggerMode::BREAKPOINT;
+        }
+        UpdateWatcherData( map );
+    }
+}
+
+bool MemoryDebugger::HasWatcherDataChanged( const byte * const memory ) const
+{
+    for (const auto &[ address, value ] : watcher )
+    {
+        if ( value != memory[ address ] )
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void MemoryDebugger::UpdateWatcherData( const byte * const memory )
+{
+    for ( auto &[ address, value ] : watcher )
+    {
+        const byte data = memory[ address ];
+        if ( value != data )
+        {
+            value = data;
+        }
+    }
 }
