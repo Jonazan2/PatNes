@@ -890,15 +890,17 @@ short Cpu::BRK()
 
 short Cpu::JSR()
 {
+    const word jumpAddress = GetAbsoluteAddress();
+
+    /* Save the current address - 1 in the stack */
     Register previousPC = PC;
     --previousPC.value;
 
-    /* Save the current address in the stack */
     PushToStack( previousPC.hi );
     PushToStack( previousPC.low );
 
     /* Jump to the new address */
-    PC.value = GetAbsoluteAddress();
+    PC.value = jumpAddress;
 
     return 6;
 }
