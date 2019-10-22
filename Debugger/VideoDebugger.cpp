@@ -2,6 +2,7 @@
 
 #include "ImguiWrapper/imgui_impl_glfw_gl3.h"
 #include "../Video.h"
+#include "../Memory.h"
 #include "../PaletteColors.h"
 
 
@@ -17,6 +18,8 @@ VideoDebugger::~VideoDebugger()
         delete backgroundPalettesTextureBuffer[i];
         delete spritePalettesTextureBuffer[i];
     }
+
+    delete[] nametableTextureBuffer;
 }
 
 void VideoDebugger::CreateTextures( const Video &video )
@@ -51,9 +54,13 @@ void VideoDebugger::CreateTextures( const Video &video )
         ImGuiGLFW::Texture spritePaletteTexture = { 0, 3, 1, spritePalettesTextureBuffer[ i ] };
         spritePalettesTextureID[ i ] = ImGuiGLFW::CreateTexture( spritePaletteTexture );
     }
+
+    nametableTextureBuffer = new RGB[ 256 * 240 ];
+    ImGuiGLFW::Texture nametableTexture = { 0, 256, 240, nametableTextureBuffer };
+    nametableTextureID = ImGuiGLFW::CreateTexture( nametableTexture );
 }
 
-void VideoDebugger::ComposeView( u32 cycles, const Video &video )
+void VideoDebugger::ComposeView( u32 cycles, const Video &video, const Memory &memory )
 {
     UpdatePatternTable( video, 0x0000, leftPatternTableBuffer );
 
@@ -107,12 +114,16 @@ void VideoDebugger::ComposeView( u32 cycles, const Video &video )
         }
         ImGui::End();
     }
+
+    UpdateNameTable( video, memory, 0x2000, nametableTextureBuffer );
+    ImGui::SetNextWindowSize( ImVec2( 560, 560 ), ImGuiCond_FirstUseEver );
+    ImGui::Begin( "Nametable 0" );
+    ImGui::Image( nametableTextureBuffer, ImVec2( 512, 500 ) );
+    ImGui::End();
 }
 
 void VideoDebugger::UpdatePatternTable( const Video &video, word address, RGB *buffer )
 {
-    constexpr static RGB palette[4] = { { 255,255,255 },{ 0xCC,0xCC,0xCC },{ 0x77,0x77,0x77 }, { 0x0,0x0,0x0 } };
-
     const byte * const ppuMemory = video.GetPPUMemory();
     assert( buffer != nullptr );
     assert( ppuMemory != nullptr );
@@ -120,7 +131,7 @@ void VideoDebugger::UpdatePatternTable( const Video &video, word address, RGB *b
     u32 vramPosition = 0;
     for ( u32 tile = 0; tile < 256; ++tile )
     {
-        const u32 tileAddress = (tile * 0x10) + address;
+        const u32 tileAddress = ( tile * 0x10 ) + address;
 
         u32 localvramPosition = vramPosition;
         for ( byte row = 0; row < 8; ++row )
@@ -128,14 +139,14 @@ void VideoDebugger::UpdatePatternTable( const Video &video, word address, RGB *b
             const byte firstByte = ppuMemory[ tileAddress + row ];
             const byte secondByte = ppuMemory[ tileAddress + row + 0x07 ];
 
-            for ( byte column = 0; column < 8; ++column)
+            for ( byte column = 0; column < 8; ++column )
             {
                 byte mask = 0x01 << column;
-                const byte value = ((secondByte & mask) >> column) << 1;
-                const byte value2 = (firstByte & mask) >> column;
+                const byte value = ( ( secondByte & mask ) >> column )  << 1;
+                const byte value2 = ( firstByte & mask ) >> column;
                 const byte finalValue = value | value2;
 
-                buffer[ localvramPosition + (7 - column) ] = palette[ finalValue ];
+                buffer[ localvramPosition + ( 7 - column ) ] = palette[ finalValue ];
             }
             localvramPosition += 128;
         }
@@ -182,5 +193,46 @@ void VideoDebugger::UpdateTexturesOfCurrentPalettes( const Video &video, word ad
             paletteAddress++;
         }
         paletteAddress++;
+    }
+}
+
+void VideoDebugger::UpdateNameTable( const Video &video, const Memory &memory, word nametableAddress, RGB *buffer )
+{
+    const byte *const memoryMap = memory.GetMemoryMap();
+    assert( memoryMap != nullptr );
+
+    /* Check which pattern table is selected at the moment */
+    const byte ppuControl = memoryMap[ Video::PPUCTRL_REGISTER ];
+    const u32 patternTableAddress = ( ppuControl & 0b0001'0000 ) ? 0x1000 : 0x0000;
+
+    /* Traverse the nametable and construct the background */
+    u32 initialAddress = nametableAddress;
+    for ( u32 row = 0; row < 30; ++row )
+    {
+        for ( u32 column = 0; column < 32; ++column )
+        {
+            const byte tileOffset = video.Read( nametableAddress );
+            ++nametableAddress;
+
+            /* Update the background buffer */
+            const byte tileAddress = patternTableAddress + tileOffset;
+            u32 localvramPosition = tileAddress;
+            for ( byte tileRow = 0; tileRow < 8; ++tileRow )
+            {
+                const byte firstByte = video.Read( tileAddress + tileRow );
+                const byte secondByte = video.Read( tileAddress + tileRow + 0x07 );
+
+                for ( byte tileColumn = 0; tileColumn < 8; ++tileColumn )
+                {
+                    byte mask = 0x01 << tileColumn;
+                    const byte value = ( ( secondByte & mask ) >> tileColumn )  << 1;
+                    const byte value2 = ( firstByte & mask ) >> tileColumn;
+                    const byte finalValue = value | value2;
+
+                    buffer[ localvramPosition + ( 7 - tileColumn ) ] = palette[ finalValue ];
+                }
+                localvramPosition += 128;
+            }
+        }
     }
 }
