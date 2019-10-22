@@ -136,8 +136,8 @@ short Cpu::ExecuteInstructionCC00( byte opcode )
     static constexpr std::array< MappableInstructionFunctionPtr, 8 > INSTRUCTION_MAP =
     {
         &Cpu::BIT,
-        &Cpu::JMP,
         &Cpu::JMPA,
+        &Cpu::JMP,
 
         &Cpu::STY,
         &Cpu::LDY,
