@@ -158,7 +158,7 @@ short Cpu::ExecuteInstructionCC00( byte opcode )
     }
 
 
-    const byte instruction = ( ( opcode & 0b1110'0000 ) >> 5 );
+    const byte instruction = ( ( opcode & 0b1110'0000 ) >> 5 ) - 1;
     const MappableInstructionFunctionPtr ptr = INSTRUCTION_MAP[ instruction ];
     return ( this->*ptr )( address );
 }
