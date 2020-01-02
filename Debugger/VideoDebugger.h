@@ -15,8 +15,8 @@ public:
     void ComposeView( u32 cycles, const Video &video, const Memory &memory );
 
 private:
-    constexpr static RGB palette[4] = { { 255,255,255 },{ 0xCC,0xCC,0xCC },{ 0x77,0x77,0x77 }, { 0x0,0x0,0x0 } };
-
+    constexpr static byte palette[4] = { 0x0F, 0x2C, 0x38, 0x12 };
+ 
     using ImTextureID = void *;
 
     /* Textures */
@@ -43,10 +43,10 @@ private:
     ImTextureID     nametableTextureID;
     RGB             *nametableTextureBuffer;
 
-
     void UpdatePatternTable( const Video &video, word address, RGB *buffer );
     void GenerateNesPaletteTexture();
     void UpdateUniversalBackgroundColour( const Video &video );
     void UpdateTexturesOfCurrentPalettes( const Video &video, word address, RGB **buffer );
     void UpdateNameTable( const Video &video, const Memory &memory, word nametableAddress, RGB *buffer );
+    void DrawTile( RGB *buffer );
 };

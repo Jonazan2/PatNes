@@ -28,7 +28,7 @@ void Video::Reset()
 
     for ( u32 i = 0; i < NES_VIDEO_RESOLUTION; ++i )
     {
-        frameBuffer[ i ] = PINK;
+        frameBuffer[ i ] = color::PINK;
     }
 
     MapCartridgeCHRToPPU();

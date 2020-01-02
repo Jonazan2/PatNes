@@ -48,7 +48,13 @@ class Video
 {
 public:
 
-    static constexpr u32 NES_VIDEO_RESOLUTION = 256 * 240;
+    /* NES frame buffer constants */
+    static constexpr u32 NES_VIDEO_WIDTH = 256;
+    static constexpr u32 NES_VIDEO_HEIGHT = 240;
+    static constexpr u32 NES_VIDEO_RESOLUTION = NES_VIDEO_HEIGHT * NES_VIDEO_WIDTH;
+
+    /* NES tiles and objects constants */
+    static constexpr u32 NES_PATTERN_TILE_AMOUNT = 256;
 
     /* PPU Register addresses */
     static constexpr word PPUCTRL_REGISTER      = 0x2000;

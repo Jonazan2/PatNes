@@ -9,7 +9,7 @@
 CpuDebugger::CpuDebugger()
     : instructionJump( false )
 {
-    breakpoints.insert( 0xF109 );
+    breakpoints.insert( 0xF1CE );
 }
 
 void CpuDebugger::GenerateDisassemblerInstructionMask( Memory &memory )

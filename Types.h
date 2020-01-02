@@ -33,7 +33,10 @@ struct RGB
     }
 };
 
-constexpr RGB PINK = { 0xFF, 0x00, 0x80 };
+namespace color
+{
+    constexpr RGB PINK = { 0xFF, 0x00, 0x80 };
+}
 
 
 /* Operators */

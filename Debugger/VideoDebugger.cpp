@@ -62,14 +62,12 @@ void VideoDebugger::CreateTextures( const Video &video )
 
 void VideoDebugger::ComposeView( u32 cycles, const Video &video, const Memory &memory )
 {
-    UpdatePatternTable( video, 0x0000, leftPatternTableBuffer );
-
     ImGui::SetNextWindowSize( ImVec2( 560, 510 ), ImGuiCond_FirstUseEver );
     ImGui::Begin( "FrameBuffer" );
     ImGui::Image( frameBufferTextureID, ImVec2( 512, 480 ) );
     ImGui::End();
 
-
+    UpdatePatternTable( video, 0x0000, leftPatternTableBuffer );
     ImGui::SetNextWindowSize( ImVec2( 560, 560 ), ImGuiCond_FirstUseEver );
     ImGui::Begin( "VRAM Left" );
     ImGui::Image( leftPatternTableTextureID, ImVec2( 512, 512 ) );
@@ -118,7 +116,7 @@ void VideoDebugger::ComposeView( u32 cycles, const Video &video, const Memory &m
     UpdateNameTable( video, memory, 0x2000, nametableTextureBuffer );
     ImGui::SetNextWindowSize( ImVec2( 560, 560 ), ImGuiCond_FirstUseEver );
     ImGui::Begin( "Nametable 0" );
-    ImGui::Image( nametableTextureBuffer, ImVec2( 512, 500 ) );
+    ImGui::Image( nametableTextureID, ImVec2( 512, 500 ) );
     ImGui::End();
 }
 
@@ -129,8 +127,8 @@ void VideoDebugger::UpdatePatternTable( const Video &video, word address, RGB *b
     assert( ppuMemory != nullptr );
 
     u32 vramPosition = 0;
-    for ( u32 tile = 0; tile < 256; ++tile )
-    {
+    for ( u32 tile = 0; tile < Video::NES_PATTERN_TILE_AMOUNT; ++tile )
+    { 
         const u32 tileAddress = ( tile * 0x10 ) + address;
 
         u32 localvramPosition = vramPosition;
@@ -146,7 +144,7 @@ void VideoDebugger::UpdatePatternTable( const Video &video, word address, RGB *b
                 const byte value2 = ( firstByte & mask ) >> column;
                 const byte finalValue = value | value2;
 
-                buffer[ localvramPosition + ( 7 - column ) ] = palette[ finalValue ];
+                buffer[ localvramPosition + ( 7 - column ) ] = NES_PALETTE_COLORS[ palette[ finalValue ] ];
             }
             localvramPosition += 128;
         }
@@ -183,7 +181,7 @@ void VideoDebugger::UpdateTexturesOfCurrentPalettes( const Video &video, word ad
     assert( ppuMemory != nullptr );
     assert( buffer != nullptr );
 
-    u32 paletteAddress = address;
+    word paletteAddress = address;
     for ( byte index = 0; index < 4; ++index )
     {
         for ( byte i = 0; i < 3; ++i )
@@ -198,6 +196,7 @@ void VideoDebugger::UpdateTexturesOfCurrentPalettes( const Video &video, word ad
 
 void VideoDebugger::UpdateNameTable( const Video &video, const Memory &memory, word nametableAddress, RGB *buffer )
 {
+    /* We use the mal directly since reading some of the values in the map through memory.Read() has side effects */
     const byte *const memoryMap = memory.GetMemoryMap();
     assert( memoryMap != nullptr );
 
@@ -207,15 +206,15 @@ void VideoDebugger::UpdateNameTable( const Video &video, const Memory &memory, w
 
     /* Traverse the nametable and construct the background */
     u32 initialAddress = nametableAddress;
-    for ( u32 row = 0; row < 30; ++row )
+    for ( u32 row = 0; row < Video::NES_VIDEO_HEIGHT; ++row )
     {
-        for ( u32 column = 0; column < 32; ++column )
+        for ( u32 column = 0; column < Video::NES_VIDEO_WIDTH; ++column )
         {
             const byte tileOffset = video.Read( nametableAddress );
             ++nametableAddress;
 
             /* Update the background buffer */
-            const byte tileAddress = patternTableAddress + tileOffset;
+            const u32 tileAddress = patternTableAddress + tileOffset;
             u32 localvramPosition = tileAddress;
             for ( byte tileRow = 0; tileRow < 8; ++tileRow )
             {
@@ -224,12 +223,13 @@ void VideoDebugger::UpdateNameTable( const Video &video, const Memory &memory, w
 
                 for ( byte tileColumn = 0; tileColumn < 8; ++tileColumn )
                 {
-                    byte mask = 0x01 << tileColumn;
+                    const byte mask = 0x01 << tileColumn;
                     const byte value = ( ( secondByte & mask ) >> tileColumn )  << 1;
                     const byte value2 = ( firstByte & mask ) >> tileColumn;
                     const byte finalValue = value | value2;
 
-                    buffer[ localvramPosition + ( 7 - tileColumn ) ] = palette[ finalValue ];
+                    const u32 textureIndex = column + row * Video::NES_VIDEO_WIDTH; 
+                    buffer[ textureIndex ] = NES_PALETTE_COLORS[ palette[ finalValue ] ];
                 }
                 localvramPosition += 128;
             }

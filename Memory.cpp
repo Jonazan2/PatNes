@@ -78,10 +78,8 @@ void Memory::Write( word address, byte data )
     if ( address >= 0x2000 && address <= 0x3FFF )
     {
         const word ppuRegister = ( address % 8 ) + 0x2000;
-        if ( ppuRegister == Video::PPUDATA_ADDRESS )
+        if ( ppuRegister == Video::PPUADDR_REGISTER )
         {
-            const word address = map[ Video::PPUADDR_REGISTER ];
-
             if ( IsAddressLatchClear )
             {
                 IsAddressLatchClear = false;
@@ -91,11 +89,24 @@ void Memory::Write( word address, byte data )
             {
                 currentVRamAddress = data | currentVRamAddress;
             }
-            map[ Video::PPUDATA_ADDRESS ] = data;
+            map[ Video::PPUADDR_REGISTER ] = data;
+
+        }
+        else if ( ppuRegister == Video::PPUDATA_ADDRESS )
+        {
+            const word address = currentVRamAddress;
+            video->Write( address, data );
 
             const byte ppuControlRegister = map[ Video::PPUCTRL_REGISTER ];
-            const byte incrementAmount = ( ppuControlRegister | 0b0000'0100 ) >> 2;
-            map[ Video::PPUADDR_REGISTER ] = incrementAmount;
+            const byte incrementType = ( ppuControlRegister & 0b0000'0100 ) >> 2;
+            if ( incrementType == 0 )
+            {
+                currentVRamAddress++;
+            }
+            else
+            {
+                currentVRamAddress += 32;
+            }
         }
         else
         {
