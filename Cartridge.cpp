@@ -38,7 +38,7 @@ bool Cartridge::TryLoad( const char* romFile )
     std::basic_ifstream<byte> cartridgeFile( romFile, std::ios::binary | std::ios::in | std::ios::ate );
     if ( cartridgeFile.is_open() )
     {
-        cartridgeSize = cartridgeFile.tellg();
+        cartridgeSize = static_cast< u32 >( cartridgeFile.tellg() );
         cartridgeFile.seekg( 0 );
 
         rom = new byte[ cartridgeSize ];

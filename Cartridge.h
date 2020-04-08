@@ -1,7 +1,5 @@
 #pragma once
 
-#include <array>
-
 #include "Types.h"
 
 
@@ -17,7 +15,7 @@ public:
         Count
     };
 
-    static constexpr std::array< const char*, static_cast< size_t >( MirroringType::Count ) > MirroringTypeString =
+    static constexpr const char* MirroringTypeString [ static_cast< size_t >( MirroringType::Count ) ] =
     {
         "Horizontal",
         "Vertical"

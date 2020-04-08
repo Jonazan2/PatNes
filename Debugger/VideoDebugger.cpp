@@ -1,5 +1,7 @@
 #include "VideoDebugger.h"
 
+#include <stdio.h>
+
 #include "ImguiWrapper/imgui_impl_glfw_gl3.h"
 #include "../Video.h"
 #include "../Memory.h"
@@ -80,7 +82,7 @@ void VideoDebugger::ComposeView( u32 cycles, const Video &video, const Memory &m
     ImGui::End();
 
     {
-        const u32 lineHeight = ImGui::GetTextLineHeight();
+        const float lineHeight = ImGui::GetTextLineHeight();
 
         ImGui::SetNextWindowSize( ImVec2( 260, 70 ), ImGuiCond_FirstUseEver );
         ImGui::Begin( "NES Palette" );

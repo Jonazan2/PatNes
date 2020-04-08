@@ -5,7 +5,7 @@
 #include <assert.h>
 #include "Cartridge.h"
 #include "Video.h"
-
+#include <cstring>
 
 Memory::Memory( const Cartridge *cartridge, Video *video )
     : cartridge( cartridge )

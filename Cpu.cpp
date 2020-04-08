@@ -3,22 +3,9 @@
 #include "Cpu.h"
 
 #include <assert.h>
-#include <array>
 #include <unordered_map>
 
 #include "Memory.h"
-
-
-const std::unordered_map< Cpu::Flags, const char * > Cpu::FLAGS_STRING  =
-{
-    { Cpu::Flags::Carry,            "Carry"             },
-    { Cpu::Flags::Zero,             "Zero"              },
-    { Cpu::Flags::InterruptDisable, "Interrupt Disable" },
-    { Cpu::Flags::DecimalMode,      "Decimal Mode"      },
-    { Cpu::Flags::Break,            "Break"             },
-    { Cpu::Flags::Overflow,         "Overflow"          },
-    { Cpu::Flags::Negative,         "Negative"          },
-};
 
 
 Cpu::Cpu( Memory *memory )
@@ -89,7 +76,7 @@ short Cpu::ExecuteSubroutineOrInterruptInstruction( byte opcode )
 
 short Cpu::ExecuteBranchInstruction( byte opcode )
 {
-    static constexpr std::array< Cpu::Flags, 4> OPERAND_TO_FLAG = 
+    constexpr static const Cpu::Flags OPERAND_TO_FLAG [] = 
     {
         Cpu::Flags::Negative,
         Cpu::Flags::Overflow,
@@ -133,7 +120,7 @@ short Cpu::ExecuteMappableInstruction( byte opcode )
 short Cpu::ExecuteInstructionCC00( byte opcode )
 {
     /* We only need the 'aaa' part of the instruction to map it since we already know that cc == 01 */
-    static constexpr std::array< MappableInstructionFunctionPtr, 8 > INSTRUCTION_MAP =
+    constexpr static const MappableInstructionFunctionPtr INSTRUCTION_MAP [] =
     {
         &Cpu::BIT,
         &Cpu::JMPA,
@@ -166,7 +153,7 @@ short Cpu::ExecuteInstructionCC00( byte opcode )
 short Cpu::ExecuteInstructionCC01( byte opcode )
 {
     /* We only need the 'aaa' part of the instruction to map it since we already know that cc == 01 */
-    static constexpr std::array< MappableInstructionFunctionPtr, 8 > INSTRUCTION_MAP =
+    constexpr static const MappableInstructionFunctionPtr INSTRUCTION_MAP [] =
     {
         &Cpu::ORA,
         &Cpu::AND,
@@ -201,7 +188,7 @@ short Cpu::ExecuteInstructionCC01( byte opcode )
 
 short Cpu::ExecuteInstructionCC10( byte opcode )
 {
-    static constexpr std::array< MappableInstructionFunctionPtr, 8 > INSTRUCTION_MAP =
+    constexpr static const MappableInstructionFunctionPtr INSTRUCTION_MAP [] =
     {
         &Cpu::ASL,
         &Cpu::ROL,
@@ -214,7 +201,7 @@ short Cpu::ExecuteInstructionCC10( byte opcode )
         &Cpu::INC
     };
 
-    static constexpr std::array< InstructionFunctionPtr, 4 > ACCUMULATOR_MODE_INSTRUCTION_MAP =
+    constexpr static const InstructionFunctionPtr ACCUMULATOR_MODE_INSTRUCTION_MAP [] =
     {
         &Cpu::ASLA,
         &Cpu::ROLA,

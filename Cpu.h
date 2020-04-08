@@ -23,7 +23,16 @@ public:
         Carry               = 0b0000'0001,
     };
 
-    static const std::unordered_map<Cpu::Flags, const char *> FLAGS_STRING;
+    inline static const std::unordered_map< Cpu::Flags, const char * > FLAGS_STRING  =
+    {
+        { Cpu::Flags::Carry,            "Carry"             },
+        { Cpu::Flags::Zero,             "Zero"              },
+        { Cpu::Flags::InterruptDisable, "Interrupt Disable" },
+        { Cpu::Flags::DecimalMode,      "Decimal Mode"      },
+        { Cpu::Flags::Break,            "Break"             },
+        { Cpu::Flags::Overflow,         "Overflow"          },
+        { Cpu::Flags::Negative,         "Negative"          },
+    };
 
 
     Cpu( Memory *memory );

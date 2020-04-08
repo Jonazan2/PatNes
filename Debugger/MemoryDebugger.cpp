@@ -7,6 +7,11 @@
 #include "Debugger.h"
 #include "../Memory.h"
 
+MemoryDebugger::MemoryDebugger()
+    : watcherAsBreakpoint( false )
+{
+}
+
 
 void MemoryDebugger::ComposeView( const Memory *memory, DebuggerMode& mode )
 {

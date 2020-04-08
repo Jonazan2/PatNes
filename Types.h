@@ -11,6 +11,9 @@ using i64 = long long;
 using u32 = unsigned int;
 using i32 = int;
 
+using u16 = unsigned short;
+using i16 = short;
+
 union Register 
 {
     struct 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <unordered_map>
-#include <array>
 
 #include "Types.h"
 
@@ -26,7 +25,7 @@ enum class CpuAddressMode : byte
     MAX
 };
 
-constexpr std::array<const char *, static_cast< byte > ( CpuAddressMode::MAX ) > ADDRESS_MODE_STRING =
+static constexpr const char * ADDRESS_MODE_STRING [ static_cast< byte > ( CpuAddressMode::MAX ) ] =
 {
     "Implicit",
     "Accumulator",
@@ -43,7 +42,7 @@ constexpr std::array<const char *, static_cast< byte > ( CpuAddressMode::MAX ) >
     "Indexed Y",
 };
 
-constexpr std::array< byte, static_cast< byte > ( CpuAddressMode::MAX ) > ADDRESS_MODE_OPCODE_LENGTH =
+static constexpr byte ADDRESS_MODE_OPCODE_LENGTH [ static_cast< byte > ( CpuAddressMode::MAX ) ] =
 {
     1,  /* CpuAddressMode::Implicit */
     1,  /* CpuAddressMode::Accumulator */

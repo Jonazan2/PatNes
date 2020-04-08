@@ -10,7 +10,7 @@ enum class DebuggerMode : byte;
 class MemoryDebugger
 {
 public:
-    MemoryDebugger() = default;
+    MemoryDebugger();
 
     void ComposeView( const Memory *memory, DebuggerMode& mode );
     void UpdateWatcher( const Memory *memory, DebuggerMode& mode );
