@@ -9,7 +9,7 @@
 CpuDebugger::CpuDebugger()
     : instructionJump( false )
 {
-    breakpoints.insert( 0xF1CE );
+    //breakpoints.insert( 0xF1CE );
 }
 
 void CpuDebugger::GenerateDisassemblerInstructionMask( Memory &memory )
@@ -195,7 +195,7 @@ void CpuDebugger::ComposeView( Cpu &cpu, Memory &memory, u32 cycles, DebuggerMod
             {
                 ImGui::SetScrollFromPosY( ImGui::GetCursorStartPos().y + ( PC * ImGui::GetTextLineHeightWithSpacing() ), 0.f );
             }
-            else if ( mode == DebuggerMode::IDLE && !instructionJump || goToPcPosition )
+            else if ( ( mode == DebuggerMode::IDLE && !instructionJump ) || goToPcPosition )
             {
                 ImGui::SetScrollFromPosY( ImGui::GetCursorStartPos().y + ( PC * ImGui::GetTextLineHeightWithSpacing() ), 0.f );
                 instructionJump = true;

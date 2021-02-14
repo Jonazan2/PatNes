@@ -48,5 +48,4 @@ private:
     void UpdateUniversalBackgroundColour( const Video &video );
     void UpdateTexturesOfCurrentPalettes( const Video &video, word address, RGB **buffer );
     void UpdateNameTable( const Video &video, const Memory &memory, word nametableAddress, RGB *buffer );
-    void DrawTile( RGB *buffer );
 };

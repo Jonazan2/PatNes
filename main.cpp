@@ -30,6 +30,7 @@ int main(int argc, char** argv)
 
     Video video( &cartridge );
     Memory memory( &cartridge, &video );
+    video.Init( &memory );
     Cpu cpu( &memory );
 
     Debugger debugger( &cpu, &memory, &video );
@@ -53,12 +54,19 @@ int main(int argc, char** argv)
 
             case DebuggerUpdateResult::RESET:
             {
+                debugger.ResetDebugger();
                 memory.Reset();
                 video.Reset();
                 cpu.Reset();
                 currentCycles = 0;
             }
             break;
+
+            case DebuggerUpdateResult::CONTINUE:
+            default:
+            {
+                // Nothing to do here
+            }
         }
 
         if ( currentCycles >= AVERAGE_CYCLES_PER_FRAME )

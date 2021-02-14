@@ -43,33 +43,39 @@
 
 
 class Cartridge;
+class Memory;
 
 class Video
 {
 public:
 
     /* NES frame buffer constants */
-    static constexpr u32 NES_VIDEO_WIDTH = 256;
-    static constexpr u32 NES_VIDEO_HEIGHT = 240;
-    static constexpr u32 NES_VIDEO_RESOLUTION = NES_VIDEO_HEIGHT * NES_VIDEO_WIDTH;
+    static constexpr u32 NES_VIDEO_WIDTH                = 256;
+    static constexpr u32 NES_VIDEO_HEIGHT               = 240;
+    static constexpr u32 NES_VIDEO_RESOLUTION           = NES_VIDEO_HEIGHT * NES_VIDEO_WIDTH;
 
     /* NES tiles and objects constants */
-    static constexpr u32 NES_PATTERN_TILE_AMOUNT = 256;
+    static constexpr u32 NES_PATTERN_TILE_AMOUNT        = 256;
+    static constexpr u32 MAX_SCANLINES_PER_FRAME        = 262;
+    static constexpr u32 CYCLE_DURATION_PER_SCANLINE    = 341;
+    static constexpr u32 POSTRENDER_SCANLINE            = 241;
+    static constexpr u32 VBLANK_SCANLINE                = 241;
 
     /* PPU Register addresses */
-    static constexpr word PPUCTRL_REGISTER      = 0x2000;
-    static constexpr word PPUMASK_REGISTER      = 0x2001;
-    static constexpr word PPUSTATUS_REGISTER    = 0x2002;
-    static constexpr word OAMA_REGISTER         = 0x2003;
-    static constexpr word OAMADATA_REGISTER     = 0x2004;
-    static constexpr word PPUSCROLL_REGISTER    = 0x2005;
-    static constexpr word PPUADDR_REGISTER      = 0x2006;
-    static constexpr word PPUDATA_ADDRESS       = 0x2007;
+    static constexpr word PPUCTRL_REGISTER              = 0x2000;
+    static constexpr word PPUMASK_REGISTER              = 0x2001;
+    static constexpr word PPUSTATUS_REGISTER            = 0x2002;
+    static constexpr word OAMA_REGISTER                 = 0x2003;
+    static constexpr word OAMADATA_REGISTER             = 0x2004;
+    static constexpr word PPUSCROLL_REGISTER            = 0x2005;
+    static constexpr word PPUADDR_REGISTER              = 0x2006;
+    static constexpr word PPUDATA_ADDRESS               = 0x2007;
 
 
     Video( Cartridge *cartridge );
     ~Video();
 
+    void Init( Memory *memorySystem );
     void Reset();
 
     void Update( u32 cycles );
@@ -85,13 +91,16 @@ public:
 private:
     /* Associated Systems */
     Cartridge       *cartridge;
+    Memory          *memory;
 
     /* PPU memory layout */
-    byte            *memory;
+    byte            *map;
 
     /* Frame buffer */
     RGB             *frameBuffer;
 
+    u32             ppuCycles;
+    u32             currentScanline;
 
     void MapCartridgeCHRToPPU();
 };

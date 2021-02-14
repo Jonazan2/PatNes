@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Memory.h"
 
 #include <assert.h>
@@ -26,13 +24,13 @@ void Memory::Reset()
 
     MapCartridge();
 
-    map[ Video::PPUCTRL_REGISTER, 0x00 ];
-    map[ Video::PPUMASK_REGISTER, 0x00 ];
-    map[ Video::PPUSTATUS_REGISTER, 0b1010'0000 ];
-    map[ Video::OAMA_REGISTER, 0x00 ];
-    map[ Video::OAMADATA_REGISTER, 0x00 ];
-    map[ Video::PPUSCROLL_REGISTER, 0x00 ];
-    map[ Video::PPUDATA_ADDRESS, 0x00 ];
+    map[ Video::PPUCTRL_REGISTER ] = 0x00;
+    map[ Video::PPUMASK_REGISTER ] = 0x00;
+    map[ Video::PPUSTATUS_REGISTER ] = 0b1010'0000;
+    map[ Video::OAMA_REGISTER ] = 0x00;
+    map[ Video::OAMADATA_REGISTER ] = 0x00;
+    map[ Video::PPUSCROLL_REGISTER ] = 0x00;
+    map[ Video::PPUDATA_ADDRESS ] = 0x00;
 }
 
 void Memory::MapCartridge()
@@ -87,6 +85,7 @@ void Memory::Write( word address, byte data )
             }
             else
             {
+                IsAddressLatchClear = true;
                 currentVRamAddress = data | currentVRamAddress;
             }
             map[ Video::PPUADDR_REGISTER ] = data;

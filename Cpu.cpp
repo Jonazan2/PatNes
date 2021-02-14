@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Cpu.h"
 
 #include <assert.h>
@@ -133,7 +131,7 @@ short Cpu::ExecuteInstructionCC00( byte opcode )
     };
 
 
-    word address;
+    word address = 0x00;
     const byte addressingMode = ( opcode & 0b0001'1100 ) >> 2;
     switch ( addressingMode )
     {
@@ -167,7 +165,7 @@ short Cpu::ExecuteInstructionCC01( byte opcode )
     };
 
 
-    word address;
+    word address = 0x00;
     const byte addressingMode = ( opcode & 0b0001'1100 ) >> 2;
     switch ( addressingMode )
     {

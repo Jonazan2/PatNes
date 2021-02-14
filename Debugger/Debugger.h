@@ -33,6 +33,7 @@ public:
     Debugger( Debugger & ) = delete;
 
     void StartDebugger();
+    void ResetDebugger();
     DebuggerUpdateResult Update( float deltaMilliseconds, u32 cycles );
     void CloseDebugger();
 

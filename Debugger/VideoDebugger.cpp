@@ -82,8 +82,6 @@ void VideoDebugger::ComposeView( u32 cycles, const Video &video, const Memory &m
     ImGui::End();
 
     {
-        const float lineHeight = ImGui::GetTextLineHeight();
-
         ImGui::SetNextWindowSize( ImVec2( 260, 70 ), ImGuiCond_FirstUseEver );
         ImGui::Begin( "NES Palette" );
         ImGui::Image( nesPaletteTextureID, ImVec2( 256, 64 ) );
@@ -207,7 +205,6 @@ void VideoDebugger::UpdateNameTable( const Video &video, const Memory &memory, w
     const u32 patternTableAddress = ( ppuControl & 0b0001'0000 ) ? 0x1000 : 0x0000;
 
     /* Traverse the nametable and construct the background */
-    u32 initialAddress = nametableAddress;
     for ( u32 row = 0; row < Video::NES_VIDEO_HEIGHT; ++row )
     {
         for ( u32 column = 0; column < Video::NES_VIDEO_WIDTH; ++column )

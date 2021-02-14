@@ -32,7 +32,7 @@ void Debugger::StartDebugger()
     glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 5 );
     glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
 
-    window = glfwCreateWindow( 1920, 1080, "PatNes", nullptr, nullptr );
+    window = glfwCreateWindow( 2560, 1440, "PatNes", nullptr, nullptr );
     if ( window == nullptr )
     {
         glfwTerminate();
@@ -61,6 +61,11 @@ void Debugger::StartDebugger()
     cpuDebugger.GenerateDisassemblerInstructionMask( *memory );
 
     Update(0.f,0);
+}
+
+void Debugger::ResetDebugger()
+{
+    mode = DebuggerMode::IDLE;
 }
 
 void Debugger::CloseDebugger()
@@ -126,6 +131,7 @@ DebuggerUpdateResult Debugger::Update( float deltaMilliseconds, u32 cycles )
     if ( reset )
     {
         reset = false;
+        mode = DebuggerMode::IDLE;
         return DebuggerUpdateResult::RESET;
     }
 
@@ -140,7 +146,7 @@ void Debugger::ComposeView( u32 cycles )
     ComposeEmulatorControlView();
     cpuDebugger.ComposeView( *cpu, *memory, cycles, mode );
     videoDebugger.ComposeView( cycles, *video, *memory );
-    memoryDebugger.ComposeView( memory, mode );
+    memoryDebugger.ComposeView( memory, video, mode );
 }
 
 void Debugger::ComposeEmulatorControlView()

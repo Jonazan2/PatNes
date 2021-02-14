@@ -6,22 +6,53 @@
 
 #include "Debugger.h"
 #include "../Memory.h"
+#include "../Video.h"
+
 
 MemoryDebugger::MemoryDebugger()
     : watcherAsBreakpoint( false )
+    , currentView( CurrentSelectedView::Memory )
 {
 }
 
-
-void MemoryDebugger::ComposeView( const Memory *memory, DebuggerMode& mode )
+void MemoryDebugger::ComposeView( const Memory *memory, const Video *video, DebuggerMode& mode )
 {
     assert( memory != nullptr );
-    const byte *map = memory->GetMemoryMap();
-    assert( map != nullptr );
+    assert( video != nullptr );
+
+    const byte * map;
 
     ImGui::SetNextWindowPos( ImVec2( 650, 150 ), ImGuiCond_FirstUseEver );
     ImGui::Begin( "Memory" );
     ImGui::BeginChild( "##scrolling", ImVec2( 0, 450 ) );
+
+    if ( ImGui::BeginTabBar( " Tabs ", ImGuiTabBarFlags_::ImGuiTabBarFlags_NoCloseWithMiddleMouseButton ) )
+    {
+        if ( ImGui::BeginTabItem( "Memory" ) )
+        {
+            currentView = CurrentSelectedView::Memory;
+            ComposeMemoryHexContentView( memory->GetMemoryMap(), mode );
+            ComposeMemoryWatcherView( memory->GetMemoryMap(), mode );
+            ImGui::EndTabItem();
+        }
+
+        if ( ImGui::BeginTabItem( "Video" ) )
+        {
+            currentView = CurrentSelectedView::Video;
+            ComposeMemoryHexContentView( video->GetPPUMemory(), mode );
+            ComposeMemoryWatcherView( video->GetPPUMemory(), mode );
+            ImGui::EndTabItem();
+        }
+    }
+
+    ImGui::EndTabBar();
+    ImGui::EndChild();
+    ImGui::End();
+}
+
+void MemoryDebugger::ComposeMemoryHexContentView( const byte *map, DebuggerMode& mode  )
+{
+    assert( map != nullptr );
 
     ImGui::PushStyleVar( ImGuiStyleVar_FramePadding, ImVec2( 0, 0 ) );
     ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImVec2( 0, 0 ) );
@@ -38,8 +69,6 @@ void MemoryDebugger::ComposeView( const Memory *memory, DebuggerMode& mode )
     float height = ImGui::GetTextLineHeight();
     u32 totalLines = static_cast< i32 >( ( ( MEMORY_VIEW_MEMORY_SIZE + MEMORY_VIEW_ROWS - 1 ) / MEMORY_VIEW_ROWS ) );
     ImGuiListClipper clipper( totalLines, height );
-    i32 visibleStartAddr = clipper.DisplayStart * MEMORY_VIEW_ROWS;
-    i32 visibleEndAddr = clipper.DisplayEnd * MEMORY_VIEW_ROWS;
 
     bool drawSeparator = true;
     for ( i32 lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++ )
@@ -77,10 +106,10 @@ void MemoryDebugger::ComposeView( const Memory *memory, DebuggerMode& mode )
 
     clipper.End();
     ImGui::PopStyleVar( 2 );
-    ImGui::EndChild();
+}
 
-
-    /* Watcher */
+void MemoryDebugger::ComposeMemoryWatcherView( const byte *map, DebuggerMode& mode  )
+{
     ImGui::Separator();
 
     ImGui::PushItemWidth( 160 );
@@ -138,8 +167,6 @@ void MemoryDebugger::ComposeView( const Memory *memory, DebuggerMode& mode )
         ImGui::Columns(1);
         ImGui::Separator();
     }
-
-    ImGui::End();
 }
 
 void MemoryDebugger::UpdateWatcher( const Memory* memory, DebuggerMode& mode )

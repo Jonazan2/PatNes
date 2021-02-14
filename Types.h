@@ -14,6 +14,10 @@ using i32 = int;
 using u16 = unsigned short;
 using i16 = short;
 
+using r32 = float;
+using r64 = double;
+
+
 union Register 
 {
     struct 
@@ -40,7 +44,6 @@ namespace color
 {
     constexpr RGB PINK = { 0xFF, 0x00, 0x80 };
 }
-
 
 /* Operators */
 

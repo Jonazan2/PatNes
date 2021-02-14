@@ -5,14 +5,21 @@
 #include "../Types.h"
 
 class Memory;
+class Video;
 enum class DebuggerMode : byte;
 
 class MemoryDebugger
 {
+    enum class CurrentSelectedView : byte
+    {
+        Memory = 0,
+        Video
+    };
+
 public:
     MemoryDebugger();
 
-    void ComposeView( const Memory *memory, DebuggerMode& mode );
+    void ComposeView( const Memory *memory, const Video *video, DebuggerMode& mode );
     void UpdateWatcher( const Memory *memory, DebuggerMode& mode );
 
 private:
@@ -22,7 +29,10 @@ private:
 
     std::map<word, byte>    watcher;
     bool                    watcherAsBreakpoint;
+    CurrentSelectedView     currentView;
 
+    void ComposeMemoryHexContentView( const byte *map, DebuggerMode& mode  );
+    void ComposeMemoryWatcherView( const byte *map, DebuggerMode& mode  );
     bool HasWatcherDataChanged( const byte * const memory ) const;
     void UpdateWatcherData( const byte * const memory );
 };
